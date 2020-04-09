@@ -70,7 +70,11 @@ $ cd ..
 $ pip3 install --user -e gym/
 ```
 
-
+### Finally install spinning up"
+```bash
+$ cd f1tenth-spinningup/
+$ pip install -e .
+```
 
 
 
