@@ -5,7 +5,7 @@ import torch
 from torch.optim import Adam
 import gym
 import time
-import spinup.algos.pytorch.sac.core as core
+import spinup.algos.pytorch.sqn.core as core
 from spinup.utils.logx import EpochLogger
 
 
@@ -42,7 +42,7 @@ class ReplayBuffer:
 
 
 
-def sqn(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
+def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
@@ -151,11 +151,11 @@ def sqn(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     np.random.seed(seed)
 
     env, test_env = env_fn(), env_fn()
-    obs_dim = env.observation_space.shape
-    act_dim = env.action_space.shape[0]
+    obs_dim = env.observation_space.shape[0]
+    act_dim = env.action_space.n
 
-    # Action limit for clamping: critically, assumes all dimensions share the same bound!
-    act_limit = env.action_space.high[0]
+    # # Action limit for clamping: critically, assumes all dimensions share the same bound!
+    # act_limit = env.action_space.high[0]
 
     # Create actor-critic module and target networks
     ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
@@ -269,10 +269,27 @@ def sqn(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
     def test_agent():
         for j in range(num_test_episodes):
-            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            d, ep_ret, ep_len = False, 0, 0
+            o = test_env.reset({'x': env_init['initial_x'],
+                                'y': env_init['initial_y'],
+                                'theta': env_init['initial_theta']})
+            #Convert o to RL obs 
+            RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
+
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
-                o, r, d, _ = test_env.step(get_action(o, True))
+                # o, r, d, _ = test_env.step(get_action(o, True))
+                a = get_action(RLobs, True)
+                #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
+                ego_speed = 0.0
+                ego_steer = 0.0
+                opp_speed = 0.0
+                opp_steer = 0.0
+                action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
+                
+                o, r, d, _ = test_env.step(action)
+                #Convert o to RL obs 
+                RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
                 ep_ret += r
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
@@ -280,7 +297,11 @@ def sqn(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
     start_time = time.time()
-    o, ep_ret, ep_len = env.reset(), 0, 0
+    o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'],
+                                   'y': env_init['initial_y'],
+                                   'theta': env_init['initial_theta']}), 0, 0
+    #Convert o to RL obs 
+    RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
 
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
@@ -289,14 +310,26 @@ def sqn(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         # from a uniform distribution for better exploration. Afterwards, 
         # use the learned policy. 
         if t > start_steps:
-            a = get_action(o)
+            # a = get_action(o)
+            a = get_action(RLobs)
         else:
             a = env.action_space.sample()
 
+        #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
+        ego_speed = 0.0
+        ego_steer = 0.0
+        opp_speed = 0.0
+        opp_steer = 0.0
+        action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
+        
         # Step the env
-        o2, r, d, _ = env.step(a)
+        o2, r, d, _ = env.step(action)
         ep_ret += r
         ep_len += 1
+
+        #Convert o2 to RLobs2
+        RLobs2 = np.concatenate((o2['poses_x'],o2['poses_y'],o2['poses_theta']))
+
 
         # Ignore the "done" signal if it comes from hitting the time
         # horizon (that is, when it's an artificial terminal signal
@@ -304,16 +337,22 @@ def sqn(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         d = False if ep_len==max_ep_len else d
 
         # Store experience to replay buffer
-        replay_buffer.store(o, a, r, o2, d)
+        # replay_buffer.store(o, a, r, o2, d)
+        replay_buffer.store(RLobs, a, r, RLobs2, d)
 
         # Super critical, easy to overlook step: make sure to update 
         # most recent observation!
-        o = o2
+        # o = o2
+        RLobs = RLobs2
 
         # End of trajectory handling
         if d or (ep_len == max_ep_len):
             logger.store(EpRet=ep_ret, EpLen=ep_len)
-            o, ep_ret, ep_len = env.reset(), 0, 0
+            o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'],
+                                           'y': env_init['initial_y'],
+                                           'theta': env_init['initial_theta']}), 0, 0
+            #Convert o to RL obs 
+            RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
 
         # Update handling
         if t >= update_after and t % update_every == 0:
@@ -364,7 +403,7 @@ if __name__ == '__main__':
 
     torch.set_num_threads(torch.get_num_threads())
 
-    sac(lambda : gym.make(args.env), actor_critic=core.MLPActorCritic,
-        ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), 
-        gamma=args.gamma, seed=args.seed, epochs=args.epochs,
-        logger_kwargs=logger_kwargs)
+    # sqn(lambda : gym.make(args.env), actor_critic=core.MLPActorCritic,
+    #     ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), 
+    #     gamma=args.gamma, seed=args.seed, epochs=args.epochs,
+    #     logger_kwargs=logger_kwargs)
