@@ -30,6 +30,7 @@ $ sudo cp -r /usr/include/eigen3/Eigen /usr/include
 ```
 
 ### Protobuf:
+
 ```bash
 $ cd f1tenth_gym
 $ git clone https://github.com/google/protobuf.git
@@ -41,7 +42,6 @@ $ sudo make install
 $ ldconfig
 $ make clean
 ```
-## If protobof is already a submodule
 
 ### Python packages:
 
@@ -66,9 +66,6 @@ $ cp sim_requests_pb2.py ../gym/
 $ cd ..
 $ pip3 install --user -e gym/
 ```
-
-
-
 
 
 
