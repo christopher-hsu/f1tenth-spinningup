@@ -9,6 +9,7 @@ data/
 .DS_Store
 _build/
 
+f1tenth_gym/protobuf
 f1tenth_gym/build/
 f1tenth_gym/gym/f110_gym.egg-info
 __pycache__
