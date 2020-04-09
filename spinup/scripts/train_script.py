@@ -34,7 +34,7 @@ def main():
     h_cg = 0.074
     cs_f = 4.718
     cs_r = 5.4562
-    exec_dir = '../f1tenth_gym/build/'
+    exec_dir = '/home/chsu/repositories/f1tenth-spinningup/f1tenth_gym/build/'
     map_path = '../f1tenth_gym/maps/skirk.yaml'
     map_img_ext = '.png'
 
