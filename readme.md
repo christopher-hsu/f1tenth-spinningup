@@ -52,21 +52,10 @@ $ rm -r protobuf
 $ pip3 install --user numpy==1.16.0 scipy==1.2.0 numba zmq pyzmq Pillow gym protobuf==3.8.0 pyyaml msgpack==0.6.2
 ```
 
-### Python packages for spinningup:
+### Python packages for f1tenth_gym and spinningup:
 ```bash
 
-$ pip3 install --user cloudpickle==1.2.1 \
-        ipython \
-        joblib \
-        matplotlib==3.1.1 \
-        mpi4py \
-        pandas \
-        pytest \
-        psutil \
-        seaborn==0.8.1 \
-        tensorflow>=1.8.0,<2.0 \
-        torch==1.3.1 \
-        tqdm \
+$ pip3 install --trusted-host pypi.python.org -r requirements.txt
 ```
 
 ### To install the simulation environment natively, clone this repo (it is already cloned, follow the installation steps).
