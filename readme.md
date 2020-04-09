@@ -18,6 +18,63 @@ This module contains a variety of helpful resources, including:
 Get started at [spinningup.openai.com](https://spinningup.openai.com)!
 
 
+
+## Installation for f1tenth_gym(Native)
+The environment officially supports Python3, Python2 might also work. You'll need several dependencies to run this environment:
+
+### Eigen and protobuf dependencies:
+
+```bash
+$ sudo apt-get install -y libzmq3-dev build-essential autoconf libtool libeigen3-dev
+$ sudo cp -r /usr/include/eigen3/Eigen /usr/include
+```
+
+### Protobuf:
+```bash
+$ cd f1tenth_gym
+$ git clone https://github.com/google/protobuf.git
+$ cd protobuf
+$ ./autogen.sh
+$ ./configure
+$ make -j4
+$ sudo make install
+$ ldconfig
+$ make clean
+```
+## If protobof is already a submodule
+
+### Python packages:
+
+```bash
+$ pip3 install --user numpy scipy numba zmq pyzmq Pillow gym protobuf pyyaml msgpack==0.6.2
+```
+
+### To install the simulation environment natively, clone this repo.
+
+```bash
+$ git clone https://github.com/f1tenth/f1tenth_gym
+```
+
+### Then install the env via the following steps:
+```bash
+$ cd f1tenth_gym
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ cp sim_requests_pb2.py ../gym/
+$ cd ..
+$ pip3 install --user -e gym/
+```
+
+
+
+
+
+
+
+
+
 Citing Spinning Up
 ------------------
 
