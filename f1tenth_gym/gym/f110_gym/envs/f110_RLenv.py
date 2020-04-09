@@ -39,6 +39,12 @@ class F110RLEnv(gym.Env, utils.EzPickle):
     def __init__(self):
         # RL params
         self.action_space = spaces.Discrete(3)
+        '''The state is: 
+        [x_ego, x_enemy, y,ego, y_enemy, theta_ego, theta_enemy]
+         '''
+        self.limit = np.array([[-1000,-1000,-1000,-1000,-2*np.pi, -2*np.pi],
+                        [1000, 1000, 1000, 1000, 2*np.pi, 2*np.pi]])
+        self.observation_space = spaces.Box(self.limit[0], self.limit[1], dtype=np.float32)
 
         # simualtor params
         self.params_set = False
@@ -433,7 +439,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         # print('Gym env - Reset done')
         obs, reward, done, info = self.step(action)
         # print('Gym env - step done for reset')
-        return obs, reward, done, info
+        return obs #, reward, done, info    #reset function should not have rew,done,info
 
     def init_map(self, map_path, img_ext, rgb, flip):
         """
