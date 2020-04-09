@@ -32,21 +32,24 @@ $ sudo cp -r /usr/include/eigen3/Eigen /usr/include
 ### Protobuf:
 
 ```bash
-$ cd f1tenth_gym
-$ git clone https://github.com/google/protobuf.git
+$ git clone https://github.com/protocolbuffers/protobuf.git
 $ cd protobuf
+$ git checkout tags/v3.8.0
+$ git submodule update --init --recursive
 $ ./autogen.sh
 $ ./configure
-$ make -j4
-$ sudo make install
+$ make -j8
+$ make install
 $ ldconfig
 $ make clean
+$ cd ..
+$ rm -r protobuf
 ```
 
 ### Python packages:
 
 ```bash
-$ pip3 install --user numpy scipy numba zmq pyzmq Pillow gym protobuf pyyaml msgpack==0.6.2
+$ pip3 install --user numpy==1.16.0 scipy==1.2.0 numba zmq pyzmq Pillow gym protobuf==3.8.0 pyyaml msgpack==0.6.2
 ```
 
 ### To install the simulation environment natively, clone this repo (it is already cloned, follow the installation steps).
