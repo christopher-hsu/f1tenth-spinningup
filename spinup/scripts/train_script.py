@@ -1,13 +1,14 @@
 import pdb, argparse
-import tensorflow as tf
+# import tensorflow as tf
 import torch
+import torch.nn as nn
 
 import gym
 from gym import wrappers
 # from TTenv import Display2D
 #Algs
 # from spinup import ppo
-from spinup import sac_pytorch
+from spinup import sqn_pytorch
 
 #Envs
 # from TTenv import MultiGoalCont
@@ -22,9 +23,10 @@ def main():
     racecar_env = gym.make('f110_gym:f110-RL-v0')
 
     # Initial state
-    initial_x = [0.0, 2.0]
-    initial_y = [0.0, 0.0]
-    initial_theta = [0.0, 0.0]
+    initialization = {}
+    initialization['initial_x'] = [0.0, 2.0]
+    initialization['initial_y'] = [0.0, 0.0]
+    initialization['initial_theta'] = [0.0, 0.0]
     lap_time = 0.0
 
     # wheelbase = 0.3302
@@ -40,14 +42,13 @@ def main():
     map_img_ext = '.png'
 
     # init gym backend
-    racecar_env = gym.make('f110_gym:f110-v0')
     racecar_env.init_map(map_path, map_img_ext, False, False)
     racecar_env.update_params(mu, h_cg, l_r, cs_f, cs_r, I_z, mass, exec_dir, double_finish=True)
 
-    # # Resetting the environment
+    # Resetting the environment
     # obs, step_reward, done, info = racecar_env.reset({'x': initial_x,
-    #                                                   'y': initial_y,
-    #                                                   'theta': initial_theta})
+                                                      # 'y': initial_y,
+                                                      # 'theta': initial_theta})
     # import pdb;pdb.set_trace()
     # # Simulation loop
     # while not done:
@@ -71,10 +72,11 @@ def main():
     env_fn = lambda : racecar_env
     
     #Training function
-    ac_kwargs = dict(hidden_sizes=[64,64], activation=tf.nn.relu)
+    ac_kwargs = dict(hidden_sizes=[64,64], activation=nn.ReLU)
     logger_kwargs = dict(output_dir='data/sac/'+exp_name, exp_name=exp_name)
-    sac_pytorch(env_fn=env_fn, ac_kwargs=ac_kwargs, steps_per_epoch=5000, epochs=args.epochs, 
-        logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
+
+    sqn_pytorch(env_fn=env_fn, env_init=initialization, ac_kwargs=ac_kwargs, steps_per_epoch=5000, 
+        epochs=args.epochs, logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
 
 
 
