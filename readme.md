@@ -49,7 +49,7 @@ $ make clean
 $ pip3 install --user numpy scipy numba zmq pyzmq Pillow gym protobuf pyyaml msgpack==0.6.2
 ```
 
-### To install the simulation environment natively, clone this repo.
+### To install the simulation environment natively, clone this repo (it is already installed).
 
 ```bash
 $ git clone https://github.com/f1tenth/f1tenth_gym
