@@ -46,12 +46,6 @@ $ cd ..
 $ rm -r protobuf
 ```
 
-### Python packages for f1tenth_gym:
-```bash
-
-$ pip3 install --user numpy==1.16.0 scipy==1.2.0 numba zmq pyzmq Pillow gym protobuf==3.8.0 pyyaml msgpack==0.6.2
-```
-
 ### Python packages for f1tenth_gym and spinningup:
 ```bash
 
