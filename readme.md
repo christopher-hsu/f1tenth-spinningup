@@ -32,15 +32,18 @@ $ sudo cp -r /usr/include/eigen3/Eigen /usr/include
 ### Protobuf:
 
 ```bash
-$ cd f1tenth_gym
-$ git clone https://github.com/google/protobuf.git
+$ git clone https://github.com/protocolbuffers/protobuf.git
 $ cd protobuf
+$ git checkout tags/v3.8.0
+$ git submodule update --init --recursive
 $ ./autogen.sh
 $ ./configure
-$ make -j4
-$ sudo make install
+$ make -j8
+$ make install
 $ ldconfig
 $ make clean
+$ cd ..
+$ rm -r protobuf
 ```
 
 ### Python packages:
