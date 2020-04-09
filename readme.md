@@ -49,7 +49,7 @@ $ rm -r protobuf
 ### Python packages:
 
 ```bash
-$ pip3 install --user numpy scipy numba zmq pyzmq Pillow gym protobuf pyyaml msgpack==0.6.2
+$ pip3 install --user numpy==1.16.0 scipy==1.2.0 numba zmq pyzmq Pillow gym protobuf==3.8.0 pyyaml msgpack==0.6.2
 ```
 
 ### To install the simulation environment natively, clone this repo (it is already cloned, follow the installation steps).
