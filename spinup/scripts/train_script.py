@@ -73,7 +73,7 @@ def main():
     
     #Training function
     ac_kwargs = dict(hidden_sizes=[64,64], activation=nn.ReLU)
-    logger_kwargs = dict(output_dir='data/sac/'+exp_name, exp_name=exp_name)
+    logger_kwargs = dict(output_dir='data/sqn/'+exp_name, exp_name=exp_name)
 
     sqn_pytorch(env_fn=env_fn, env_init=initialization, ac_kwargs=ac_kwargs, steps_per_epoch=5000, 
         epochs=args.epochs, logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)

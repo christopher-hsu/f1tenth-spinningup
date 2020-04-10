@@ -7,7 +7,7 @@ import gym
 import time
 import spinup.algos.pytorch.sqn.core as core
 from spinup.utils.logx import EpochLogger
-
+from gym.spaces import Box, Discrete
 
 class ReplayBuffer:
     """
@@ -158,7 +158,7 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
     # act_limit = env.action_space.high[0]
 
     # Create actor-critic module and target networks
-    ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
+    ac = actor_critic(env.observation_space, env.action_space, alpha, **ac_kwargs)
     ac_targ = deepcopy(ac)
 
     # Freeze target networks with respect to optimizers (only update via polyak averaging)
@@ -169,11 +169,18 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
     q_params = itertools.chain(ac.q1.parameters(), ac.q2.parameters())
 
     # Experience buffer
-    replay_buffer = ReplayBuffer(obs_dim=obs_dim, act_dim=act_dim, size=replay_size)
+    if isinstance(env.action_space, Box):
+        a_dim = act_dim
+    elif isinstance(env.action_space, Discrete):
+        a_dim = 1
+
+    replay_buffer = ReplayBuffer(obs_dim=obs_dim, act_dim=a_dim, size=replay_size)
 
     # Count variables (protip: try to get a feel for how different size networks behave!)
-    var_counts = tuple(core.count_vars(module) for module in [ac.pi, ac.q1, ac.q2])
-    logger.log('\nNumber of parameters: \t pi: %d, \t q1: %d, \t q2: %d\n'%var_counts)
+    # var_counts = tuple(core.count_vars(module) for module in [ac.pi, ac.q1, ac.q2])
+    # logger.log('\nNumber of parameters: \t pi: %d, \t q1: %d, \t q2: %d\n'%var_counts)
+    var_counts = tuple(core.count_vars(module) for module in [ac.q1, ac.q2])
+    logger.log('\nNumber of parameters: \t q1: %d, \t q2: %d\n'%var_counts)
 
     # Set up function for computing SAC Q-losses
     def compute_loss_q(data):
@@ -185,13 +192,17 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         # Bellman backup for Q functions
         with torch.no_grad():
             # Target actions come from *current* policy
-            a2, logp_a2 = ac.pi(o2)
+            # a2, logp_a2 = ac.pi(o2)
+            v1 = ac.q1.values(o2)
+            v2 = ac.q2.values(o2)
+            a2, logp_a2 = ac.pi(v1+v2)
 
             # Target Q-values
             q1_pi_targ = ac_targ.q1(o2, a2)
             q2_pi_targ = ac_targ.q2(o2, a2)
             q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
-            backup = r + gamma * (1 - d) * (q_pi_targ - alpha * logp_a2)
+            #Unsqueeze adds another dim, necessary to be column vectors
+            backup = r.unsqueeze(1) + gamma * (1 - d).unsqueeze(1) * (q_pi_targ - alpha * logp_a2)
 
         # MSE loss against Bellman backup
         loss_q1 = ((q1 - backup)**2).mean()
@@ -205,23 +216,23 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         return loss_q, q_info
 
     # Set up function for computing SAC pi loss
-    def compute_loss_pi(data):
-        o = data['obs']
-        pi, logp_pi = ac.pi(o)
-        q1_pi = ac.q1(o, pi)
-        q2_pi = ac.q2(o, pi)
-        q_pi = torch.min(q1_pi, q2_pi)
+    # def compute_loss_pi(data):
+    #     o = data['obs']
+    #     pi, logp_pi = ac.pi(o)
+    #     q1_pi = ac.q1(o, pi)
+    #     q2_pi = ac.q2(o, pi)
+    #     q_pi = torch.min(q1_pi, q2_pi)
 
-        # Entropy-regularized policy loss
-        loss_pi = (alpha * logp_pi - q_pi).mean()
+    #     # Entropy-regularized policy loss
+    #     loss_pi = (alpha * logp_pi - q_pi).mean()
 
-        # Useful info for logging
-        pi_info = dict(LogPi=logp_pi.detach().numpy())
+    #     # Useful info for logging
+    #     pi_info = dict(LogPi=logp_pi.detach().numpy())
 
-        return loss_pi, pi_info
+    #     return loss_pi, pi_info
 
     # Set up optimizers for policy and q-function
-    pi_optimizer = Adam(ac.pi.parameters(), lr=lr)
+    # pi_optimizer = Adam(ac.pi.parameters(), lr=lr)
     q_optimizer = Adam(q_params, lr=lr)
 
     # Set up model saving
@@ -239,21 +250,21 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
 
         # Freeze Q-networks so you don't waste computational effort 
         # computing gradients for them during the policy learning step.
-        for p in q_params:
-            p.requires_grad = False
+        # for p in q_params:
+            # p.requires_grad = False
 
         # Next run one gradient descent step for pi.
-        pi_optimizer.zero_grad()
-        loss_pi, pi_info = compute_loss_pi(data)
-        loss_pi.backward()
-        pi_optimizer.step()
+        # pi_optimizer.zero_grad()
+        # loss_pi, pi_info = compute_loss_pi(data)
+        # loss_pi.backward()
+        # pi_optimizer.step()
 
         # Unfreeze Q-networks so you can optimize it at next DDPG step.
-        for p in q_params:
-            p.requires_grad = True
+        # for p in q_params:
+            # p.requires_grad = True
 
         # Record things
-        logger.store(LossPi=loss_pi.item(), **pi_info)
+        # logger.store(LossPi=loss_pi.item(), **pi_info)
 
         # Finally, update target networks by polyak averaging.
         with torch.no_grad():
@@ -280,13 +291,14 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
                 # Take deterministic actions at test time 
                 # o, r, d, _ = test_env.step(get_action(o, True))
                 a = get_action(RLobs, True)
+
                 #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
                 ego_speed = 0.0
                 ego_steer = 0.0
                 opp_speed = 0.0
                 opp_steer = 0.0
                 action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
-                
+
                 o, r, d, _ = test_env.step(action)
                 #Convert o to RL obs 
                 RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
@@ -380,8 +392,8 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
             logger.log_tabular('Q2Vals', with_min_and_max=True)
-            logger.log_tabular('LogPi', with_min_and_max=True)
-            logger.log_tabular('LossPi', average_only=True)
+            # logger.log_tabular('LogPi', with_min_and_max=True)
+            # logger.log_tabular('LossPi', average_only=True)
             logger.log_tabular('LossQ', average_only=True)
             logger.log_tabular('Time', time.time()-start_time)
             logger.dump_tabular()
