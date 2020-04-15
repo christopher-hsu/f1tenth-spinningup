@@ -174,8 +174,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
     replay_buffer = ReplayBuffer(obs_dim=obs_dim, act_dim=a_dim, size=replay_size)
 
     # Count variables (protip: try to get a feel for how different size networks behave!)
-    # var_counts = tuple(core.count_vars(module) for module in [ac.pi, ac.q1, ac.q2])
-    # logger.log('\nNumber of parameters: \t pi: %d, \t q1: %d, \t q2: %d\n'%var_counts)
     var_counts = tuple(core.count_vars(module) for module in [ac.q1, ac.q2])
     logger.log('\nNumber of parameters: \t q1: %d, \t q2: %d\n'%var_counts)
 
@@ -189,7 +187,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         # Bellman backup for Q functions
         with torch.no_grad():
             # Target actions come from *current* policy
-            # a2, logp_a2 = ac.pi(o2)
             v1 = ac.q1.values(o2)
             v2 = ac.q2.values(o2)
             a2, logp_a2 = ac.pi(v1+v2)
@@ -246,12 +243,10 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
                                 'y': env_init['initial_y'],
                                 'theta': env_init['initial_theta']})
             #Convert o to RL obs 
-            # RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
             RLobs = core.process_obs(o)
 
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
-                # o, r, d, _ = test_env.step(get_action(o, True))
                 a = get_action(RLobs, True)
 
                 #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
@@ -263,7 +258,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
 
                 o, r, d, _ = test_env.step(action)
                 #Convert o to RL obs 
-                # RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
                 RLobs = core.process_obs(o)
                 ep_ret += r
                 ep_len += 1
@@ -276,7 +270,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
                                    'y': env_init['initial_y'],
                                    'theta': env_init['initial_theta']}), 0, 0
     #Convert o to RL obs 
-    # RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
     RLobs = core.process_obs(o)
 
     # Main loop: collect experience in env and update/log each epoch
@@ -286,7 +279,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         # from a uniform distribution for better exploration. Afterwards, 
         # use the learned policy. 
         if t > start_steps:
-            # a = get_action(o)
             a = get_action(RLobs)
         else:
             a = env.action_space.sample()
@@ -304,7 +296,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         ep_len += 1
 
         #Convert o2 to RLobs2
-        # RLobs2 = np.concatenate((o2['poses_x'],o2['poses_y'],o2['poses_theta']))
         RLobs2 = core.process_obs(o2)
 
 
@@ -319,7 +310,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
 
         # Super critical, easy to overlook step: make sure to update 
         # most recent observation!
-        # o = o2
         RLobs = RLobs2
 
         # End of trajectory handling
@@ -329,7 +319,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
                                            'y': env_init['initial_y'],
                                            'theta': env_init['initial_theta']}), 0, 0
             #Convert o to RL obs 
-            # RLobs = np.concatenate((o['poses_x'],o['poses_y'],o['poses_theta']))
             RLobs = core.process_obs(o)
 
         # Update handling
@@ -358,8 +347,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
             logger.log_tabular('Q2Vals', with_min_and_max=True)
-            # logger.log_tabular('LogPi', with_min_and_max=True)
-            # logger.log_tabular('LossPi', average_only=True)
             logger.log_tabular('LossQ', average_only=True)
             logger.log_tabular('Time', time.time()-start_time)
             logger.dump_tabular()

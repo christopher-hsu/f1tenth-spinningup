@@ -1,5 +1,4 @@
 import pdb, argparse
-# import tensorflow as tf
 import torch
 import torch.nn as nn
 
@@ -7,15 +6,7 @@ import gym
 from gym import wrappers
 # from TTenv import Display2D
 #Algs
-# from spinup import ppo
 from spinup import sqn_pytorch
-
-#Envs
-# from TTenv import MultiGoalCont
-# from TTenv import RandGoalCont
-# from TTenv import NoBelief
-# from TTenv import TargetTrackingContEnv0
-# from TTenv import TargetTrackingContEnv1
 
 
 def main():
@@ -66,8 +57,8 @@ def main():
     exp_name = 'tests'
 
     # # Wrappers
-    # env = wrappers.TimeLimit(env, max_episode_steps=args.horizon)
     # env = Display2D(env)
+
     # # Create env function, future use gym.make()
     env_fn = lambda : racecar_env
     
@@ -83,13 +74,6 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # parser.add_argument('--algos', help='agent policy', default='sac')
-    # parser.add_argument('--env', help='environment ID', default='MultiGoalCont')
-    # parser.add_argument('--map_name', help='map ID', default='empty')
-    # parser.add_argument('--metaenv', default=None)
-    # parser.add_argument('--horizon', type=int, default=150)
-    # parser.add_argument('--num_targets', type=int, default=2)
-    # parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--epochs', type=int, default=150)
     parser.add_argument('--checkpoint_freq', type=int, default=2)
     parser.add_argument('--is_training', type=bool, default=True)
