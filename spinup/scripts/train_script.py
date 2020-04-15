@@ -8,8 +8,8 @@ from gym import wrappers
 #Algs
 from spinup import sqn_pytorch
 #Agents
-# from f1tenth_gym.ego_agent
-from race_agents.opp_agent import agents
+from race_agents.ego_agent.agents import PurePursuitAgent as EgoPurePursuit
+from race_agents.opp_agent.agents import PurePursuitAgent as OppPurePursuit
 
 BASE_DIR = os.path.dirname('/'.join(str.split(os.path.realpath(__file__),'/')[:-2]))
 
@@ -36,10 +36,15 @@ def main():
     map_path = BASE_DIR + '/f1tenth_gym/maps/skirk.yaml'
     map_img_ext = '.png'
 
+    #Params for ego agent
+    wheelbase = 0.3302
+    csv_path = BASE_DIR + '/race_agents/ego_agent/waypoints/multiwp-new.csv'
+    ego_agent = EgoPurePursuit(csv_path, wheelbase)
+
     #Params for opponent agent
     wheelbase = 0.3302
     csv_path = BASE_DIR + '/race_agents/opp_agent/skirk.csv'
-    opp_agent = agents.PurePursuitAgent(csv_path, wheelbase)
+    opp_agent = OppPurePursuit(csv_path, wheelbase)
 
     # init gym backend
     racecar_env.init_map(map_path, map_img_ext, False, False)
@@ -57,8 +62,9 @@ def main():
     ac_kwargs = dict(hidden_sizes=[64,64], activation=nn.ReLU)
     logger_kwargs = dict(output_dir='data/sqn/'+exp_name, exp_name=exp_name)
 
-    sqn_pytorch(env_fn=env_fn, env_init=initialization, opp_agent=opp_agent, ac_kwargs=ac_kwargs, 
-        steps_per_epoch=5000, epochs=args.epochs, logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
+    sqn_pytorch(env_fn=env_fn, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
+        ac_kwargs=ac_kwargs, steps_per_epoch=5000, epochs=args.epochs, 
+        logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
 
 
 

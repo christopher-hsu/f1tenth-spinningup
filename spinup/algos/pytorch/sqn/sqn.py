@@ -42,7 +42,7 @@ class ReplayBuffer:
 
 
 
-def sqn(env_fn, env_init, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
+def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
@@ -249,11 +249,11 @@ def sqn(env_fn, env_init, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs
                 # Take deterministic actions at test time 
                 a = get_action(RLobs, True)
 
-                #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
-                ego_speed = 0.0
-                ego_steer = 0.0
-
+                #RL action to drive control actions
+                ego_speed, ego_steer = ego_agent.plan(o, a)
+                #Opponent decision
                 opp_speed, opp_steer = opp_agent.plan(o)
+
                 action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
 
                 o, r, d, _ = test_env.step(action)
@@ -283,10 +283,9 @@ def sqn(env_fn, env_init, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs
         else:
             a = env.action_space.sample()
 
-        #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
-        ego_speed = 0.0
-        ego_steer = 0.0
-
+        #RL action to drive control actions
+        ego_speed, ego_steer = ego_agent.plan(o, a)
+        #Opponent decision
         opp_speed, opp_steer = opp_agent.plan(o)
         action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
         
