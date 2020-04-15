@@ -42,8 +42,10 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         '''The state is: 
         [x_ego, x_enemy, y,ego, y_enemy, theta_ego, theta_enemy]
          '''
-        self.limit = np.array([[-1000,-1000,-1000,-1000,-2*np.pi, -2*np.pi],
-                        [1000, 1000, 1000, 1000, 2*np.pi, 2*np.pi]])
+        self.limit = np.array([
+            [-50,-50,-2*np.pi,-10,-10, -50,-50,-2*np.pi,-10,-10, -50,-50,-50,-50,-50,-50],
+            [50, 50, 2*np.pi, 10, 10, 50,50,2*np.pi,10,10,50,50,50,50,50,50]
+            ])
         self.observation_space = spaces.Box(self.limit[0], self.limit[1], dtype=np.float32)
 
         # simualtor params
@@ -344,7 +346,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         carobs_list = observations_proto.observations
         # construct observation dict
         # Observation DICT, assume indices consistent: {'ego_idx':int, 'scans':[[]], 'poses_x':[], 'poses_y':[], 'poses_theta':[], 'linear_vels_x':[], 'linear_vels_y':[], 'ang_vels_z':[], 'collisions':[], 'collision_angles':[]}
-        obs = {'ego_idx': observations_proto.ego_idx, 'scans': [], 'poses_x': [], 'poses_y': [], 'poses_theta': [], 'linear_vels_x': [], 'linear_vels_y': [], 'ang_vels_z': [], 'collisions': [], 'collision_angles': [], 'lap_times': [], 'lap_counts': []}
+        obs = {'ego_idx': observations_proto.ego_idx, 'scansf': [], 'poses_x': [], 'poses_y': [], 'poses_theta': [], 'linear_vels_x': [], 'linear_vels_y': [], 'ang_vels_z': [], 'collisions': [], 'collision_angles': [], 'lap_times': [], 'lap_counts': []}
         for car_obs in carobs_list:
             obs['scans'].append(car_obs.scan)
             obs['poses_x'].append(car_obs.pose_x)

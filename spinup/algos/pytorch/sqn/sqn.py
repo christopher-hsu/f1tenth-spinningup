@@ -41,6 +41,74 @@ class ReplayBuffer:
         return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in batch.items()}
 
 
+def process_obs(obs):
+
+    '''
+        Args: 
+            obs: observation that we get out of each step
+        Returns:
+            obs_array: 15 features extracted that include: ego_pose,opp_pose, 3 closest points using lidar. All of the
+            features are in global frame (numpy array shape (16,))
+    '''
+
+    num_smallest = 3
+
+    obs_array = np.zeros((10 + (num_smallest*2),))
+
+    obs_array[0] = obs['poses_x'][0] # ego pos_x
+    obs_array[1] = obs['poses_y'][0] # ego pos_y
+    obs_array[2] = obs['poses_theta'][0] # ego theta
+
+    R_mat_ego = np.array([[np.cos(obs_array[2]),np.sin(obs_array[2])],
+                        [-np.sin(obs_array[2]),np.cos(obs_array[2])]])
+
+    ego_vel_car_frame = np.zeros((1,2))
+
+    ego_vel_car_frame[0,0] = obs['linear_vels_x'][0]
+    ego_vel_car_frame[0,1] = 0
+
+    ego_vel_global = np.dot(ego_vel_car_frame,R_mat_ego)
+
+    obs_array[3:5] = ego_vel_global[0,:] # ego velocity x and y
+
+    obs_array[5] = obs['poses_x'][1] # opp pos_x
+    obs_array[6] = obs['poses_y'][1] # opp pos_y
+    obs_array[7] = obs['poses_theta'][1] # opp theta
+
+    R_mat_opp = np.array([[np.cos(obs_array[7]),np.sin(obs_array[7])],
+                        [-np.sin(obs_array[7]),np.cos(obs_array[7])]])
+
+    opp_vel_car_frame = np.zeros((1,2))
+
+    opp_vel_car_frame[0,0] = obs['linear_vels_x'][1]
+
+    opp_vel_car_frame[0,1] = 0
+
+    opp_vel_global = np.dot(ego_vel_car_frame,R_mat_opp)
+
+    obs_array[8:10] = opp_vel_global[0,:] # opp velocity x and y
+
+    ### Process the lidar data to get the postion of the closest 3 points:
+
+    ranges = np.array(list(obs['scans'][0]))
+    angles = np.linspace(-4.7/2., 4.7/2. num=ranges.shape[0])
+
+    ranges = ranges[np.isfinite(ranges)]
+    angles = angles[np.isfinite(ranges)]
+
+    k_smallest_idx = np.argpartition(ranges,num_smallest)
+    k_smallest_idx = k_smallest_idx[:num_smallest]
+
+    lidar_xy_car_frame = np.zeros((num_smallest,2))
+
+    lidar_xy_car_frame[:,0] = (ranges[k_smallest_idx] * np.cos(angles[k_smallest_idx]))
+    lidar_xy_car_frame[:,1] = (ranges[k_smallest_idx] * np.sin(angles[k_smallest_idx]))
+
+    lidar_xy_global = np.dot(lidar_xy_car_frame,R_mat_ego)
+
+    obs_array[10:] = lidar_xy_global.flatten()
+
+    return obs_array
 
 def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
