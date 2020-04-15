@@ -1,4 +1,4 @@
-import pdb, argparse
+import pdb, argparse, os
 import torch
 import torch.nn as nn
 
@@ -9,6 +9,8 @@ from gym import wrappers
 from spinup import sqn_pytorch
 #Opponents
 from f1tenth_gym.opp_agents import agents
+
+BASE_DIR = os.path.dirname('/'.join(str.split(os.path.realpath(__file__),'/')[:-2]))
 
 def main():
     # making the environment
@@ -29,13 +31,13 @@ def main():
     h_cg = 0.074
     cs_f = 4.718
     cs_r = 5.4562
-    exec_dir = '/home/chsu/repositories/f1tenth-spinningup/f1tenth_gym/build/'
-    map_path = '../f1tenth_gym/maps/skirk.yaml'
+    exec_dir = BASE_DIR + '/f1tenth_gym/build/'
+    map_path = BASE_DIR + '/f1tenth_gym/maps/skirk.yaml'
     map_img_ext = '.png'
 
     #Params for opponent agent
     wheelbase = 0.3302
-    csv_path = '/home/chsu/repositories/f1tenth-spinningup/f1tenth_gym/opp_agents/skirk.csv'
+    csv_path = BASE_DIR + '/f1tenth_gym/opp_agents/skirk.csv'
     opp_agent = agents.PurePursuitAgent(csv_path, wheelbase)
 
     # init gym backend
