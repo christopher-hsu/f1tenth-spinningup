@@ -72,7 +72,7 @@ def process_obs(obs):
     ### Process the lidar data to get the postion of the closest 3 points:
 
     ranges = np.array(list(obs['scans'][0]))
-    angles = np.linspace(-4.7/2., 4.7/2. num=ranges.shape[0])
+    angles = np.linspace(-4.7/2., 4.7/2., num=ranges.shape[0])
 
     ranges = ranges[np.isfinite(ranges)]
     angles = angles[np.isfinite(ranges)]
@@ -92,66 +92,75 @@ def process_obs(obs):
     return obs_array
 
 class MLPActionSelector(nn.Module):
-
+    '''
+    Soft parameterization of q value logits,
+    pi_log = (1/Z)*(e^((v(x)/alpha) - min((v(x)/alpha)))
+    If determinstic take max value as action,
+    Else (stochastic),
+    Sample from multinomial of the soft logits.
+    '''
     def __init__(self, alpha):
         super().__init__()
-        self.log_softmax_batch = nn.LogSoftmax(dim=1) 
-        self.log_softmax = nn.LogSoftmax(dim=0) 
         self.alpha = alpha
 
+    #Used during execution on single observations
     def action(self, q, deterministic=False, with_logprob=True):
-
-        # pi_log = self.log_softmax(q/self.alpha)
-        soft_q = q/self.alpha
+        #Divide by temperature term, alpha
+        q_soft = q/self.alpha
+        #Normalize to probabilties
+        q_norm = q_soft - torch.min(q_soft)
+        pi_log = torch.exp(q_norm)
+        #Normalize
+        pi_log = torch.div(pi_log,pi_log.sum())
 
         if deterministic:
             mu = torch.argmax(pi_log)
             pi_action = mu      
         else:
-            #not sure about the negative
-            pi_action = torch.multinomial(-pi_log,1)
+            pi_action = torch.multinomial(pi_log,1)
 
         if with_logprob:
             logp_pi = torch.gather(pi_log,1,pi_action)
-            pi_action = pi
         else:
             logp_pi = None
         
         return pi_action, logp_pi
 
-
+    #Used during training on batches of obervations
     def forward(self, q, deterministic=False, with_logprob=True):
-
-        pi_log = self.log_softmax_batch(q/self.alpha)
+        #Divide by temperature term, alpha
+        q_soft = q/self.alpha
+        #Normalize to probabilties
+        q_norm = q_soft - torch.min(q_soft)
+        pi_log = torch.exp(q_norm)
+        #Normalize
+        pi_log = torch.div(pi_log,pi_log.sum(dim=1,keepdim=True))
 
         if deterministic:
-            mu = torch.argmax(pi_log, dim=1, keepdim=True)
+            mu = torch.argmax(pi_log)
             pi_action = mu      
         else:
-            #not sure about the negative
-            pi = torch.multinomial(-pi_log,1)
+            pi_action = torch.multinomial(pi_log,1)
 
         if with_logprob:
-            logp_pi = torch.gather(pi_log,1,pi)
-            pi_action = pi
+            logp_pi = torch.gather(pi_log,1,pi_action)
         else:
             logp_pi = None
         
         return pi_action, logp_pi
-
 
 class MLPQFunction(nn.Module):
 
     def __init__(self, obs_dim, act_dim, hidden_sizes, activation):
         super().__init__()
-        # self.q = mlp([obs_dim + act_dim] + list(hidden_sizes) + [1], activation)
         self.vf_mlp = mlp([obs_dim] + list(hidden_sizes) + [act_dim], activation)
 
+    # v(x)
     def values(self, obs):
         v_x = self.vf_mlp(obs)
-
         return v_x
 
+    # q(x,a)
     def forward(self, obs, act):
         v_x = self.vf_mlp(obs)
         q = torch.gather(v_x, 1, act.type(torch.LongTensor))
@@ -169,7 +178,6 @@ class MLPActorCritic(nn.Module):
         act_dim = action_space.n
 
         # build policy and value functions
-        # self.pi = SquashedGaussianMLPActor(obs_dim, act_dim, hidden_sizes, activation) #, act_limit)
         self.pi = MLPActionSelector(alpha)
         self.q1 = MLPQFunction(obs_dim, act_dim, hidden_sizes, activation)
         self.q2 = MLPQFunction(obs_dim, act_dim,  hidden_sizes, activation)
