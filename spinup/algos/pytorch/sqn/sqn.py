@@ -42,13 +42,13 @@ class ReplayBuffer:
 
 
 
-def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
+def sqn(env_fn, env_init, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
         logger_kwargs=dict(), save_freq=1):
     """
-    Soft Actor-Critic (SAC)
+    Soft Q-Network, based on SAC and clipped Double Q-learning
 
 
     Args:
@@ -252,8 +252,8 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
                 #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
                 ego_speed = 0.0
                 ego_steer = 0.0
-                opp_speed = 0.0
-                opp_steer = 0.0
+
+                opp_speed, opp_steer = opp_agent.plan(o)
                 action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
 
                 o, r, d, _ = test_env.step(action)
@@ -286,8 +286,8 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         #TODO mapping RL action to speed and steer, i.e. map, 'a' (discrete) to action
         ego_speed = 0.0
         ego_steer = 0.0
-        opp_speed = 0.0
-        opp_steer = 0.0
+
+        opp_speed, opp_steer = opp_agent.plan(o)
         action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
         
         # Step the env
@@ -297,7 +297,6 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
 
         #Convert o2 to RLobs2
         RLobs2 = core.process_obs(o2)
-
 
         # Ignore the "done" signal if it comes from hitting the time
         # horizon (that is, when it's an artificial terminal signal
@@ -311,6 +310,7 @@ def sqn(env_fn, env_init, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), se
         # Super critical, easy to overlook step: make sure to update 
         # most recent observation!
         RLobs = RLobs2
+        o = o2
 
         # End of trajectory handling
         if d or (ep_len == max_ep_len):

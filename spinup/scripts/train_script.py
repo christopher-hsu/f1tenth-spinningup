@@ -7,20 +7,21 @@ from gym import wrappers
 # from TTenv import Display2D
 #Algs
 from spinup import sqn_pytorch
-
+#Opponents
+from f1tenth_gym.opp_agents import agents
 
 def main():
     # making the environment
     racecar_env = gym.make('f110_gym:f110-RL-v0')
 
-    # Initial state
+    # Initial state for ego and opp
     initialization = {}
     initialization['initial_x'] = [0.0, 2.0]
     initialization['initial_y'] = [0.0, 0.0]
     initialization['initial_theta'] = [0.0, 0.0]
     lap_time = 0.0
 
-    # wheelbase = 0.3302
+    # Params for env
     mass= 3.74
     l_r = 0.17145
     I_z = 0.04712
@@ -32,42 +33,29 @@ def main():
     map_path = '../f1tenth_gym/maps/skirk.yaml'
     map_img_ext = '.png'
 
+    #Params for opponent agent
+    wheelbase = 0.3302
+    csv_path = '/home/chsu/repositories/f1tenth-spinningup/f1tenth_gym/opp_agents/skirk.csv'
+    opp_agent = agents.PurePursuitAgent(csv_path, wheelbase)
+
     # init gym backend
     racecar_env.init_map(map_path, map_img_ext, False, False)
     racecar_env.update_params(mu, h_cg, l_r, cs_f, cs_r, I_z, mass, exec_dir, double_finish=True)
 
-    # Resetting the environment
-    # obs, step_reward, done, info = racecar_env.reset({'x': initial_x,
-                                                      # 'y': initial_y,
-                                                      # 'theta': initial_theta})
-    # import pdb;pdb.set_trace()
-    # # Simulation loop
-    # while not done:
-
-    #     # Your agent here
-    #     ego_speed, opp_speed, ego_steer, opp_steer = agent.plan(obs)
-
-    #     # Stepping through the environment
-    #     action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
-    #     obs, step_reward, done, info = racecar_env.step(action)
-
-    #     # Getting the lap time
-    #     lap_time += step_reward
-
     exp_name = 'tests'
 
-    # # Wrappers
+    # Wrappers
     # env = Display2D(env)
 
-    # # Create env function, future use gym.make()
+    # Create env function
     env_fn = lambda : racecar_env
     
     #Training function
     ac_kwargs = dict(hidden_sizes=[64,64], activation=nn.ReLU)
     logger_kwargs = dict(output_dir='data/sqn/'+exp_name, exp_name=exp_name)
 
-    sqn_pytorch(env_fn=env_fn, env_init=initialization, ac_kwargs=ac_kwargs, steps_per_epoch=5000, 
-        epochs=args.epochs, logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
+    sqn_pytorch(env_fn=env_fn, env_init=initialization, opp_agent=opp_agent, ac_kwargs=ac_kwargs, 
+        steps_per_epoch=5000, epochs=args.epochs, logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
 
 
 
@@ -80,3 +68,23 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     main()
+
+""" Environment example usage
+    Resetting the environment
+    
+    obs, step_reward, done, info = racecar_env.reset({'x': initial_x,
+                                                      'y': initial_y,
+                                                      'theta': initial_theta})
+    # Simulation loop
+    while not done:
+
+        # Your agent here
+        ego_speed, opp_speed, ego_steer, opp_steer = agent.plan(obs)
+
+        # Stepping through the environment
+        action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
+        obs, step_reward, done, info = racecar_env.step(action)
+
+        # Getting the lap time
+        lap_time += step_reward
+"""
