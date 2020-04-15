@@ -364,8 +364,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         obs['lap_times'] = self.lap_times
         obs['lap_counts'] = self.lap_counts
 
-        # TODO: do we need step reward?
-        reward = self.timestep
+        reward = self.get_reward()
         # update accumulated time in env
         self.current_time = self.current_time + self.timestep
         # TODO: donezo should be done in simulator? could be done here as well
@@ -379,6 +378,14 @@ class F110RLEnv(gym.Env, utils.EzPickle):
 
         # TODO: return obs, reward, done, info
         return obs, reward, done, info
+
+    def get_reward(self, obs):
+        # Reward function
+
+        reward = -self.timestep
+
+        return reward
+
 
     def reset(self, poses=None):
 
