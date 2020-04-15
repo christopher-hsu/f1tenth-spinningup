@@ -1,6 +1,6 @@
 import numpy as np
 import csv
-from f1tenth_gym.opp_agents.agent_utils import get_actuation, nearest_point_on_trajectory_py2, first_point_on_trajectory_intersecting_circle
+from race_agents.opp_agent.agent_utils import get_actuation, nearest_point_on_trajectory_py2, first_point_on_trajectory_intersecting_circle
 
 class Agent(object):
     def __init__(self, csv_path):

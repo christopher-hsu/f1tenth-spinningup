@@ -7,8 +7,9 @@ from gym import wrappers
 # from TTenv import Display2D
 #Algs
 from spinup import sqn_pytorch
-#Opponents
-from f1tenth_gym.opp_agents import agents
+#Agents
+# from f1tenth_gym.ego_agent
+from race_agents.opp_agent import agents
 
 BASE_DIR = os.path.dirname('/'.join(str.split(os.path.realpath(__file__),'/')[:-2]))
 
@@ -37,7 +38,7 @@ def main():
 
     #Params for opponent agent
     wheelbase = 0.3302
-    csv_path = BASE_DIR + '/f1tenth_gym/opp_agents/skirk.csv'
+    csv_path = BASE_DIR + '/race_agents/opp_agent/skirk.csv'
     opp_agent = agents.PurePursuitAgent(csv_path, wheelbase)
 
     # init gym backend
