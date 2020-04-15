@@ -346,7 +346,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         carobs_list = observations_proto.observations
         # construct observation dict
         # Observation DICT, assume indices consistent: {'ego_idx':int, 'scans':[[]], 'poses_x':[], 'poses_y':[], 'poses_theta':[], 'linear_vels_x':[], 'linear_vels_y':[], 'ang_vels_z':[], 'collisions':[], 'collision_angles':[]}
-        obs = {'ego_idx': observations_proto.ego_idx, 'scansf': [], 'poses_x': [], 'poses_y': [], 'poses_theta': [], 'linear_vels_x': [], 'linear_vels_y': [], 'ang_vels_z': [], 'collisions': [], 'collision_angles': [], 'lap_times': [], 'lap_counts': []}
+        obs = {'ego_idx': observations_proto.ego_idx, 'scans': [], 'poses_x': [], 'poses_y': [], 'poses_theta': [], 'linear_vels_x': [], 'linear_vels_y': [], 'ang_vels_z': [], 'collisions': [], 'collision_angles': [], 'lap_times': [], 'lap_counts': []}
         for car_obs in carobs_list:
             obs['scans'].append(car_obs.scan)
             obs['poses_x'].append(car_obs.pose_x)
