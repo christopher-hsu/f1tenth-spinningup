@@ -66,7 +66,8 @@ def main():
 
     sqn_pytorch(env_fn=env_fn, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
         ac_kwargs=ac_kwargs, steps_per_epoch=5000, epochs=args.epochs, 
-        logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq)
+        logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq, 
+        polyak=args.polyak, alpha=args.alpha, batch_size=args.batch)
 
 
 
@@ -75,7 +76,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--epochs', type=int, default=15)
     parser.add_argument('--checkpoint_freq', type=int, default=2)
-    parser.add_argument('--is_training', type=bool, default=True)
+    parser.add_argument('--polyak', type=float, default=0.995)
+    parser.add_argument('--alpha', type=float, default=0.2)
+    parser.add_argument('--batch', type=int, default=100)
     args = parser.parse_args()
     
     main()
