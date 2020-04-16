@@ -81,10 +81,10 @@ $ pip install -e .
 $ python3 spinup/scripts/train_script.py [--epochs ...]
 ```
 ### Plotting:
+see https://spinningup.openai.com/en/latest/user/plotting.html for plotting options
 ```bash
 $ python3 -m spinup.run plot data/sqn/tests/
 ```
-see https://spinningup.openai.com/en/latest/user/plotting.html for more options
 
 Citing Spinning Up
 ------------------
