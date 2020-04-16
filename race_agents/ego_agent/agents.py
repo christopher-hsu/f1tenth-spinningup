@@ -45,7 +45,6 @@ class PurePursuitAgent(Agent):
     def plan(self, obs, action):
         #Choose the path to follow
         path = self.waypoints[action]      
-        # path = self.waypoints  
         
         pose_x = obs['poses_x'][1]
         pose_y = obs['poses_y'][1]
