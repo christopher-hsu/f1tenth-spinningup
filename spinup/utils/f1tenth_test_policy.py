@@ -6,6 +6,7 @@ import tensorflow as tf
 import torch
 from spinup import EpochLogger
 from spinup.utils.logx import restore_tf_graph
+import spinup.algos.pytorch.sqn.core as core
 
 
 def load_policy_and_env(fpath, itr='last', deterministic=False):
@@ -100,10 +101,10 @@ def load_pytorch_policy(fpath, deterministic=False):
     model = torch.load(fname)
 
     # make function for producing an action given a single state
-    def get_action(x):
+    def get_action(x, deterministic=True):
         with torch.no_grad():
             x = torch.as_tensor(x, dtype=torch.float32)
-            action = model.act(x)
+            action = model.act(x, deterministic)
         return action
 
     return get_action
@@ -127,9 +128,23 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
         if render:
             env.render()
             time.sleep(1e-3)
-        import pdb;pdb.set_trace()
-        a = get_action(o)
-        o, r, d, _ = env.step(a)
+        # import pdb;pdb.set_trace()
+
+        #Convert o to RL obs 
+        RLobs = core.process_obs(o)
+
+        # Take deterministic actions at test time 
+        a = get_action(RLobs, True)
+
+        #RL action to drive control actions
+        ego_speed, ego_steer = ego_agent.plan(o, a)
+        #Opponent decision
+        opp_speed, opp_steer = opp_agent.plan(o)
+
+        action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
+
+        o, r, d, _ = env.step(action)
+
         ep_ret += r
         ep_len += 1
 
