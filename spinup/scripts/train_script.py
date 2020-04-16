@@ -73,7 +73,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--epochs', type=int, default=150)
+    parser.add_argument('--epochs', type=int, default=15)
     parser.add_argument('--checkpoint_freq', type=int, default=2)
     parser.add_argument('--is_training', type=bool, default=True)
     args = parser.parse_args()
