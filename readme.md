@@ -84,7 +84,7 @@ $ python3 spinup/scripts/train_script.py [--epochs ...]
 ```bash
 $ python3 -m spinup.run plot data/sqn/tests/
 ```
-see also https://spinningup.openai.com/en/latest/user/plotting.html for more options
+see https://spinningup.openai.com/en/latest/user/plotting.html for more options
 
 Citing Spinning Up
 ------------------
