@@ -25,6 +25,7 @@ def main():
     lap_time = 0.0
 
     # Params for env
+    wheelbase = 0.3302
     mass= 3.74
     l_r = 0.17145
     I_z = 0.04712
@@ -37,14 +38,15 @@ def main():
     map_img_ext = '.png'
 
     #Params for ego agent
-    wheelbase = 0.3302
-    csv_path = BASE_DIR + '/race_agents/ego_agent/waypoints/multiwp-new.csv'
-    ego_agent = EgoPurePursuit(csv_path, wheelbase)
+    path_nums = [3,4,5,6,7]
+    ego_csv_paths = []
+    for num in path_nums:
+        ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths/multiwp%d.csv'%(num))
+    ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase)
 
     #Params for opponent agent
-    wheelbase = 0.3302
-    csv_path = BASE_DIR + '/race_agents/opp_agent/skirk.csv'
-    opp_agent = OppPurePursuit(csv_path, wheelbase)
+    opp_csv_path = BASE_DIR + '/race_agents/opp_agent/skirk.csv'
+    opp_agent = OppPurePursuit(opp_csv_path, wheelbase)
 
     # init gym backend
     racecar_env.init_map(map_path, map_img_ext, False, False)

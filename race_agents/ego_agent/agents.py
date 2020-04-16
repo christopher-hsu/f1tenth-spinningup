@@ -13,12 +13,16 @@ class Agent(object):
 
 
 class PurePursuitAgent(Agent):
+    # Pure pursuit control to a specified lane
     def __init__(self, csv_path, wheelbase):
         super(PurePursuitAgent, self).__init__(csv_path)
         self.lookahead_distance = 1.0
         self.wheelbase = wheelbase
         self.max_reacquire = 10.
-        self.waypoints = np.loadtxt(csv_path, ndmin=2,delimiter=',')
+
+        self.waypoints = []
+        for paths in csv_path:
+            self.waypoints.append(np.loadtxt(paths, ndmin=2,delimiter=','))
  
     def _get_current_waypoint(self, waypoints, lookahead_distance, position, theta):
         wpts = waypoints
@@ -39,11 +43,15 @@ class PurePursuitAgent(Agent):
             return None
 
     def plan(self, obs, action):
+        #Choose the path to follow
+        path = self.waypoints[action]      
+        # path = self.waypoints  
+        
         pose_x = obs['poses_x'][1]
         pose_y = obs['poses_y'][1]
         pose_theta = obs['poses_theta'][1]
         position = np.array([pose_x, pose_y])
-        lookahead_point = self._get_current_waypoint(self.waypoints, self.lookahead_distance, position, pose_theta)
+        lookahead_point = self._get_current_waypoint(path, self.lookahead_distance, position, pose_theta)
         if lookahead_point is None:
             return self.safe_speed, 0.0
         speed, steering_angle = get_actuation(pose_theta, lookahead_point, position, self.lookahead_distance, self.wheelbase)

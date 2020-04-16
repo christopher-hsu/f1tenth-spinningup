@@ -187,4 +187,5 @@ class MLPActorCritic(nn.Module):
             v1 = self.q1.values(obs)
             v2 = self.q2.values(obs)
             a, _ = self.pi.action(v1+v2, deterministic, False)
-            return a.numpy()
+            #From tensor to np.array to scalar
+            return np.asscalar(a.numpy())

@@ -38,7 +38,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
 
     def __init__(self):
         # RL params
-        self.action_space = spaces.Discrete(3)
+        self.action_space = spaces.Discrete(5)
         '''The state is: 
         [x_ego, x_enemy, y,ego, y_enemy, theta_ego, theta_enemy]
          '''
@@ -364,7 +364,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         obs['lap_times'] = self.lap_times
         obs['lap_counts'] = self.lap_counts
 
-        reward = self.get_reward()
+        reward = self.get_reward(obs)
         # update accumulated time in env
         self.current_time = self.current_time + self.timestep
         # TODO: donezo should be done in simulator? could be done here as well
