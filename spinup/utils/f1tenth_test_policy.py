@@ -128,7 +128,6 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
         if render:
             env.render()
             time.sleep(1e-3)
-        # import pdb;pdb.set_trace()
 
         #Convert o to RL obs 
         RLobs = core.process_obs(o)
