@@ -376,8 +376,8 @@ class F110RLEnv(gym.Env, utils.EzPickle):
             done = self._check_done()
             info = {}
 
-        # TODO: return obs, reward, done, info
-        return obs, reward, done, info
+        self.obs = obs
+        return self.obs, reward, done, info
 
     def get_reward(self, obs):
         # Reward function
@@ -446,9 +446,9 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         angs = [0.0] * self.num_agents
         action = {'ego_idx': self.ego_idx, 'speed': vels, 'steer': angs}
         # print('Gym env - Reset done')
-        obs, reward, done, info = self.step(action)
+        self.obs, reward, done, info = self.step(action)
         # print('Gym env - step done for reset')
-        return obs #, reward, done, info    #reset function should not have rew,done,info
+        return self.obs #, reward, done, info    #reset function should not have rew,done,info
 
     def init_map(self, map_path, img_ext, rgb, flip):
         """
