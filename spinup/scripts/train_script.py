@@ -4,7 +4,7 @@ import torch.nn as nn
 
 import gym
 from gym import wrappers
-# from TTenv import Display2D
+from spinup.visualize.display_wrapper import Display2D
 #Algs
 from spinup import sqn_pytorch
 #Agents
@@ -55,7 +55,7 @@ def main():
     exp_name = 'tests'
 
     # Wrappers
-    # env = Display2D(env)
+    # racecar_env = Display2D(racecar_env)
 
     # Create env function
     env_fn = lambda : racecar_env
