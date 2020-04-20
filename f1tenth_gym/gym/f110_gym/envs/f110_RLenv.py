@@ -383,6 +383,8 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         # Reward function
 
         reward = -self.timestep
+        if obs["collisions"] ==1:
+            reward += -500
 
         return reward
 
