@@ -1,8 +1,6 @@
 import os
 import numpy as np
 import math
-import sys
-
 
 
 class Agent(object):
@@ -26,6 +24,19 @@ class PurePursuit(Agent):
 
         R_mat_ego = np.array([[np.cos(theta),np.sin(theta)],
                               [-np.sin(theta),np.cos(theta)]])
+
+
+
+        quaternion = np.array([pose_msg.pose.pose.orientation.x, 
+                           pose_msg.pose.pose.orientation.y, 
+                           pose_msg.pose.pose.orientation.z, 
+                           pose_msg.pose.pose.orientation.w])
+
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        position = [ pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y] 
+       
+
+
 
         point_dist =  np.sqrt(np.sum(np.square(waypoint[:, 0:2]-position), axis=1))
         point_index = np.where(abs(point_dist-FORWARD)< 0.20)[0]
