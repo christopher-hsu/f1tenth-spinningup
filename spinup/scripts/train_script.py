@@ -39,10 +39,12 @@ def main():
 
     #Params for ego agent
     wheelbase2 = 0.3
-    path_nums = [3,4,5,6,7]
+    path_nums = list(range(2,18))
     ego_csv_paths = []
     for num in path_nums:
-        ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths/multiwp%d.csv'%(num))
+        ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths2/multiwp%d.csv'%(num))
+    ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths2/multiwp-opt.csv') ## adding the opt path
+    
     ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase2)
 
     #Params for opponent agent

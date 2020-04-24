@@ -1,7 +1,7 @@
 import pdb, argparse, json, os
 import gym
 from gym import wrappers
-from race_agents.ego_agent.agents import PurePursuitAgent as EgoPurePursuit
+from race_agents.ego_agent.agents2 import PurePursuitAgent as EgoPurePursuit
 from race_agents.opp_agent.agents import PurePursuitAgent as OppPurePursuit
 from spinup.visualize.display_wrapper import Display2D
 from spinup.utils.f1tenth_test_policy import load_pytorch_policy, run_policy
@@ -32,11 +32,15 @@ def main():
     map_img_ext = '.png'
 
     #Params for ego agent
-    path_nums = [3,4,5,6,7]
+    wheelbase2 = 0.3
+    path_nums = list(range(2,18))
     ego_csv_paths = []
     for num in path_nums:
-        ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths/multiwp%d.csv'%(num))
-    ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase)
+        ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths2/multiwp%d.csv'%(num))
+
+    ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths2/multiwp-opt.csv') ## adding the opt path
+
+    ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase2)
 
     #Params for opponent agent
     opp_csv_path = BASE_DIR + '/race_agents/opp_agent/skirk.csv'

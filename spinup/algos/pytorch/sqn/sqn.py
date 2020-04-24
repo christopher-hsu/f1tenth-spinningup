@@ -243,7 +243,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
                                 'y': env_init['initial_y'],
                                 'theta': env_init['initial_theta']})
             #Convert o to RL obs 
-            RLobs = core.process_obs(o)
+            RLobs = ego_agent.process_obs(o)
 
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
@@ -258,7 +258,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
 
                 o, r, d, _ = test_env.step(action)
                 #Convert o to RL obs 
-                RLobs = core.process_obs(o)
+                RLobs = ego_agent.process_obs(o)
                 ep_ret += r
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
@@ -270,7 +270,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
                                    'y': env_init['initial_y'],
                                    'theta': env_init['initial_theta']}), 0, 0
     #Convert o to RL obs 
-    RLobs = core.process_obs(o)
+    RLobs = ego_agent.process_obs(o)
 
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
@@ -295,7 +295,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         ep_len += 1
 
         #Convert o2 to RLobs2
-        RLobs2 = core.process_obs(o2)
+        RLobs2 = ego_agent.process_obs(o2)
 
         # Ignore the "done" signal if it comes from hitting the time
         # horizon (that is, when it's an artificial terminal signal
@@ -318,7 +318,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
                                            'y': env_init['initial_y'],
                                            'theta': env_init['initial_theta']}), 0, 0
             #Convert o to RL obs 
-            RLobs = core.process_obs(o)
+            RLobs = ego_agent.process_obs(o)
 
         # Update handling
         if t >= update_after and t % update_every == 0:

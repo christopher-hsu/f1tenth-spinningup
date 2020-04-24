@@ -42,10 +42,24 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         '''The state is: 
         [x_ego, x_enemy, y,ego, y_enemy, theta_ego, theta_enemy]
          '''
-        self.limit = np.array([
-            [-50,-50,-2*np.pi,-10,-10, -50,-50,-2*np.pi,-10,-10, -50,-50,-50,-50,-50,-50],
-            [50, 50, 2*np.pi, 10, 10, 50,50,2*np.pi,10,10,50,50,50,50,50,50]
-            ])
+        self.limit = np.zeros((2,256))
+
+        self.limit[0,:(117*2)+2] = -10
+        self.limit[1,:(117*2)+2] = 10
+
+        self.limit[0,(117*2)+2] = -2*np.pi
+        self.limit[1,(117*2)+2] = 2*np.pi
+
+        self.limit[0,(117*2)+3:(117*2)+5] = -10
+        self.limit[1,(117*2)+3:(117*2)+5] = 10
+
+        self.limit[0,(117*2)+5:] = 0
+        self.limit[1,(117*2)+5:] = 10
+        
+        # self.limit = np.array([
+        #     [-50,-50,-2*np.pi,-10,-10, -50,-50,-2*np.pi,-10,-10, -50,-50,-50,-50,-50,-50],
+        #     [50, 50, 2*np.pi, 10, 10, 50,50,2*np.pi,10,10,50,50,50,50,50,50]
+        #     ])
         self.observation_space = spaces.Box(self.limit[0], self.limit[1], dtype=np.float32)
 
         # simualtor params
