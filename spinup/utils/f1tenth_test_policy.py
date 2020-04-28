@@ -101,10 +101,10 @@ def load_pytorch_policy(fpath, deterministic=False):
     model = torch.load(fname)
 
     # make function for producing an action given a single state
-    def get_action(x, deterministic=True):
+    def get_action(x, action_mask, deterministic=True):
         with torch.no_grad():
             x = torch.as_tensor(x, dtype=torch.float32)
-            action = model.act(x, deterministic)
+            action = model.act(x, action_mask, deterministic)
         return action
 
     return get_action
@@ -130,10 +130,10 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
             time.sleep(1e-3)
 
         #Convert o to RL obs 
-        RLobs = core.process_obs(o)
+        RLobs = ego_agent.process_obs(o)
 
         # Take deterministic actions at test time 
-        a = get_action(RLobs, True)
+        a = get_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=True)
 
         #RL action to drive control actions
         ego_speed, ego_steer = ego_agent.plan(o, a)

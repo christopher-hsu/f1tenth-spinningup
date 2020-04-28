@@ -45,7 +45,7 @@ class ReplayBuffer:
 def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
-        update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
+        update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=5000, 
         logger_kwargs=dict(), save_freq=1):
     """
     Soft Q-Network, based on SAC and clipped Double Q-learning
@@ -189,7 +189,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
             # Target actions come from *current* policy
             v1 = ac.q1.values(o2)
             v2 = ac.q2.values(o2)
-            a2, logp_a2 = ac.pi(v1+v2)
+            a2, logp_a2 = ac.pi(v1+v2, action_mask=ego_agent.aval_paths)
 
             # Target Q-values
             q1_pi_targ = ac_targ.q1(o2, a2)
@@ -232,8 +232,8 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
                 p_targ.data.mul_(polyak)
                 p_targ.data.add_((1 - polyak) * p.data)
 
-    def get_action(o, deterministic=False):
-        return ac.act(torch.as_tensor(o, dtype=torch.float32), 
+    def get_action(o, action_mask, deterministic=False):
+        return ac.act(torch.as_tensor(o, dtype=torch.float32), action_mask, 
                       deterministic)
 
     def test_agent():
@@ -247,7 +247,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
 
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
-                a = get_action(RLobs, True)
+                a = get_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=True)
 
                 #RL action to drive control actions
                 ego_speed, ego_steer = ego_agent.plan(o, a)
@@ -279,9 +279,11 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         # from a uniform distribution for better exploration. Afterwards, 
         # use the learned policy. 
         if t > start_steps:
-            a = get_action(RLobs)
+            a = get_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=False)
         else:
             a = env.action_space.sample()
+            while a not in ego_agent.aval_paths:
+                a = env.action_space.sample()
 
         #RL action to drive control actions
         ego_speed, ego_steer = ego_agent.plan(o, a)
