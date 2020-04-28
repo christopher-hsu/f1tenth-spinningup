@@ -31,42 +31,28 @@ class MLPActionSelector(nn.Module):
     Else (stochastic),
     Sample from multinomial of the soft logits.
     '''
-    def __init__(self, alpha):
+    def __init__(self, alpha, act_dim):
         super().__init__()
         self.alpha = alpha
+        self.act_dim = act_dim
 
-    #Used during execution on single observations
-    def action(self, q, deterministic=False, with_logprob=True):
+        self.softmax = nn.Softmax(dim=1)
+
+
+    def forward(self, q, action_mask, deterministic=False, with_logprob=True):
         #Divide by temperature term, alpha
         q_soft = q/self.alpha
-        #Normalize to probabilties
-        q_norm = q_soft - torch.min(q_soft)
-        pi_log = torch.exp(q_norm)
-        #Normalize
-        pi_log = torch.div(pi_log,pi_log.sum())
 
-        if deterministic:
-            mu = torch.argmax(pi_log)
-            pi_action = mu      
-        else:
-            pi_action = torch.multinomial(pi_log,1)
+        # Mask out actions not available
+        mask = np.ones(self.act_dim, dtype=bool)  #16 paths + optimal path
+        mask[list(action_mask)] = False
+        try:
+            q_soft[:, mask] = -float("Inf")
+        except:
+            q_soft = q_soft.unsqueeze(0)
+            q_soft[:, mask] = -float("Inf")
 
-        if with_logprob:
-            logp_pi = torch.gather(pi_log,1,pi_action)
-        else:
-            logp_pi = None
-        
-        return pi_action, logp_pi
-
-    #Used during training on batches of obervations
-    def forward(self, q, deterministic=False, with_logprob=True):
-        #Divide by temperature term, alpha
-        q_soft = q/self.alpha
-        #Normalize to probabilties
-        q_norm = q_soft - torch.min(q_soft)
-        pi_log = torch.exp(q_norm)
-        #Normalize
-        pi_log = torch.div(pi_log,pi_log.sum(dim=1,keepdim=True))
+        pi_log = self.softmax(q_soft)
 
         if deterministic:
             mu = torch.argmax(pi_log)
@@ -110,14 +96,15 @@ class MLPActorCritic(nn.Module):
         act_dim = action_space.n
 
         # build policy and value functions
-        self.pi = MLPActionSelector(alpha)
+        self.pi = MLPActionSelector(alpha, act_dim)
         self.q1 = MLPQFunction(obs_dim, act_dim, hidden_sizes, activation)
         self.q2 = MLPQFunction(obs_dim, act_dim,  hidden_sizes, activation)
 
-    def act(self, obs, deterministic=False):
+    def act(self, obs, action_mask, deterministic=False):
         with torch.no_grad():
             v1 = self.q1.values(obs)
             v2 = self.q2.values(obs)
-            a, _ = self.pi.action(v1+v2, deterministic, False)
-            #From tensor to np.array to scalar
-            return np.asscalar(a.numpy())
+
+            a, _ = self.pi(v1+v2, action_mask, deterministic, False)
+            # Tensor to int
+            return int(a)
