@@ -57,10 +57,10 @@ class PurePursuitAgent(Agent):
         good_points = np.all([abs_tan_vals < np.pi/2, car_points[:,0]>0],axis = 0)
 
         waypoint_idx_paths = {k: v for v, k in enumerate(point_index[0][good_points])}
-
+        self.test = point_index[0][good_points]
         for key in waypoint_idx_paths.keys():
-            self.path_waypoints[key,:2] = waypoints[key,point_index[1][good_points][waypoint_idx_paths[key]],:]
-            self.path_waypoints[key,2:] = waypoints[key,point_index[1][good_points][waypoint_idx_paths[key]-1],:]
+            self.path_waypoints[key,:2] = self.waypoints[key,point_index[1][good_points][waypoint_idx_paths[key]],:]
+            self.path_waypoints[key,2:] = self.waypoints[key,point_index[1][good_points][waypoint_idx_paths[key]-1],:]
 
         self.aval_paths = set(point_index[0][good_points])
 
@@ -101,7 +101,8 @@ class PurePursuitAgent(Agent):
         min_idx = int(((-100)*(np.pi/180)-angles[0])/(angles[1]-angles[0]))
         max_idx = int(((100)*(np.pi/180)-angles[0])/(angles[1]-angles[0]))
 
-        lidar_idxs = np.random.uniform(min_idx,max_idx,num_subsample)
+        # lidar_idxs = np.random.randint(min_idx,max_idx,num_subsample)
+        lidar_idxs = np.linspace(min_idx,max_idx,num=num_subsample).astype(int) #subsample lidar
 
         lidar_xy_our_frame = np.zeros((num_subsample,2))
 
@@ -113,8 +114,8 @@ class PurePursuitAgent(Agent):
         ## lets get other cars orientation with respect us
 
         ## opp position global to our frame
-        our_position = np.array([[obs['poses_x'][0]],[obs['poses_y'][0]]])
-        opp_car_global = np.array([[obs['poses_x'][1]],[obs['poses_y'][1]]])
+        our_position = np.array([obs['poses_x'][0],obs['poses_y'][0]])
+        opp_car_global = np.array([obs['poses_x'][1],obs['poses_y'][1]])
 
         opp_car_global = opp_car_global - our_position
 
@@ -123,14 +124,13 @@ class PurePursuitAgent(Agent):
 
         pos_opp_our_frame  = np.dot(opp_car_global,R_mat.T)  ## shape (1,2) that gives their position wrt us
         theta_opp_our_frame = obs['poses_theta'][0] - obs['poses_theta'][1]  # one value that gives their theta wrt us
-        obs_array[num_subsample*2:(num_subsample*2)+2] = pos_opp_our_frame[0,:]
+        obs_array[num_subsample*2:(num_subsample*2)+2] = pos_opp_our_frame
         obs_array[(num_subsample*2)+2:(num_subsample*2)+3] = theta_opp_our_frame
 
         ## Now their velocity with respect to us
 
         # first their velocity to global frame:
-
-        vel_opp_frame = np.array([[obs['linear_vels_x'][1]],[0]])
+        vel_opp_frame = np.array([obs['linear_vels_x'][1],0])
         R_mat_opp = np.array([[np.cos(obs['poses_theta'][1]),np.sin(obs['poses_theta'][1])],
             [-np.sin(obs['poses_theta'][1]),np.cos(obs['poses_theta'][1])]])
 
@@ -140,7 +140,7 @@ class PurePursuitAgent(Agent):
 
         vel_opp_our_frame  = np.dot(vel_opp_global,R_mat.T) ## shape (1,2) that gives their velocity wrt us
 
-        obs_array[(num_subsample*2)+3:(num_subsample*2)+5] = vel_opp_our_frame[0,:]
+        obs_array[(num_subsample*2)+3:(num_subsample*2)+5] = vel_opp_our_frame
 
 
         ## Now we gotta find our distance to each lane including optimal lane
@@ -150,8 +150,12 @@ class PurePursuitAgent(Agent):
         for path in self.aval_paths:
             point1 = self.path_waypoints[path,:2]
             point2 = self.path_waypoints[path,2:]
+
             denom = np.sqrt((point2[1]-point1[1])**2 + (point2[0]-point1[0])**2)
-            num = np.abs(((point2[1]-point1[1])*our_position[0,0]) - ((point2[0]-point1[0])*our_position[0,1]) + (point2[0]*point1[1]) - (point2[1]*point1[0]))
+            if denom == 0:
+                continue
+            num = np.abs(((point2[1]-point1[1])*our_position[0]) - ((point2[0]-point1[0])*our_position[1]) + (point2[0]*point1[1]) - (point2[1]*point1[0]))
+
             obs_array[((num_subsample*2)+5) + path] = num/denom
 
         return obs_array
