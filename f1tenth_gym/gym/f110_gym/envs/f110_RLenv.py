@@ -38,28 +38,22 @@ class F110RLEnv(gym.Env, utils.EzPickle):
 
     def __init__(self):
         # RL params
-        self.action_space = spaces.Discrete(5)
-        '''The state is: 
-        [x_ego, x_enemy, y,ego, y_enemy, theta_ego, theta_enemy]
-         '''
+        self.action_space = spaces.Discrete(17) #16 paths + optimal
+        # The state is: 
         self.limit = np.zeros((2,256))
 
-        self.limit[0,:(117*2)+2] = -10
+        self.limit[0,:(117*2)+2] = -10  #subsampled Lidar
         self.limit[1,:(117*2)+2] = 10
 
-        self.limit[0,(117*2)+2] = -2*np.pi
+        self.limit[0,(117*2)+2] = -2*np.pi  #Orientation of the other car wrt our car
         self.limit[1,(117*2)+2] = 2*np.pi
 
-        self.limit[0,(117*2)+3:(117*2)+5] = -10
+        self.limit[0,(117*2)+3:(117*2)+5] = -10 #Velocity of the other car wrt our car
         self.limit[1,(117*2)+3:(117*2)+5] = 10
 
-        self.limit[0,(117*2)+5:] = 0
+        self.limit[0,(117*2)+5:] = 0    #Distance to all paths + optimal path
         self.limit[1,(117*2)+5:] = 10
         
-        # self.limit = np.array([
-        #     [-50,-50,-2*np.pi,-10,-10, -50,-50,-2*np.pi,-10,-10, -50,-50,-50,-50,-50,-50],
-        #     [50, 50, 2*np.pi, 10, 10, 50,50,2*np.pi,10,10,50,50,50,50,50,50]
-        #     ])
         self.observation_space = spaces.Box(self.limit[0], self.limit[1], dtype=np.float32)
 
         # simualtor params
@@ -397,8 +391,9 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         # Reward function
 
         reward = -self.timestep
-        if obs["collisions"] ==1:
+        if obs["collisions"][0] == True:
             reward += -500
+            print("collision!!!!!!!")
 
         return reward
 
