@@ -77,7 +77,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--epochs', type=int, default=15)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--checkpoint_freq', type=int, default=2)
     parser.add_argument('--polyak', type=float, default=0.995)
     parser.add_argument('--alpha', type=float, default=0.2)
