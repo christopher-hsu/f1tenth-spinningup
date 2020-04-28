@@ -52,7 +52,7 @@ def main():
 
 
     # Wrappers
-    racecar_env = Display2D(racecar_env)
+    racecar_env = Display2D(racecar_env, map_path, map_img_ext, False, False)
 
 
     get_action = load_pytorch_policy(args.path, deterministic=args.deterministic)
