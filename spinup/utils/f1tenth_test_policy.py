@@ -90,12 +90,12 @@ def load_tf_policy(fpath, itr, deterministic=False):
     return get_action
 
 
-# def load_pytorch_policy(fpath, itr, deterministic=False):
-def load_pytorch_policy(fpath, deterministic=False):
+def load_pytorch_policy(fpath, itr='', deterministic=False):
+# def load_pytorch_policy(fpath, deterministic=False):
     """ Load a pytorch policy saved with Spinning Up Logger."""
     
-    # fname = osp.join(fpath, 'pyt_save', 'model'+itr+'.pt')
-    fname = osp.join(fpath, 'pyt_save', 'model.pt')
+    fname = osp.join(fpath, 'pyt_save', 'model'+itr+'.pt')
+    # fname = osp.join(fpath, 'pyt_save', 'model.pt')
     print('\n\nLoading from %s.\n\n'%fname)
 
     model = torch.load(fname)

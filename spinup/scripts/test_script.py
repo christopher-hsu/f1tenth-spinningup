@@ -55,7 +55,7 @@ def main():
     racecar_env = Display2D(racecar_env, map_path, map_img_ext, False, False)
 
 
-    get_action = load_pytorch_policy(args.path, deterministic=args.deterministic)
+    get_action = load_pytorch_policy(args.path, itr=args.itr, deterministic=args.deterministic)
     run_policy(racecar_env, get_action, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
                     num_episodes=args.num_episodes, render=args.render)
 
@@ -63,24 +63,14 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--path', type=str, help='Path to config.json file')
+    parser.add_argument('--itr', type=str, default='')
     parser.add_argument('--deterministic', type=bool, default=True)
     parser.add_argument('--num_episodes', type=int, default=100)
-    parser.add_argument('--is_training', type=bool, default=True)
     parser.add_argument('--render', type=bool, default=True)
-    parser.add_argument('--horizon', type=int, default=150)
     args = parser.parse_args()
 
     config_path = args.path + 'config.json'
     with open(config_path) as json_file:
         data = json.load(json_file)
-
-    # num_targets = data['num_targets']
-    # exp_name = data['logger_kwargs']['exp_name']
-    # names = exp_name.split('_')
-    # alg_name = names[0]
-    # num_targ = names[1]
-    # env_name = names[2]
-    # map_name = names[3]
-    # num_targets = int(num_targ)
     
     main()
