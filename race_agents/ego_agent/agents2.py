@@ -167,7 +167,7 @@ class PurePursuitAgent(Agent):
         waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
         
         if np.abs(waypoint_y) < 1e-6:
-            return speed, 0.
+            return self.safe_speed, 0.
         radius = 1/(2.0*waypoint_y/self.lookahead_distance**2)
         steering_angle = np.arctan(self.wheelbase/radius)
         speed = self.select_velocity(steering_angle)
@@ -200,11 +200,13 @@ class PurePursuitAgent(Agent):
         
         if action in self.aval_paths:
             lookahead_point = self.path_waypoints[action,:2]
+            speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
         else:
-            raise Exception('Action is not accessible from here!')
+            # raise Exception('Action is not accessible from here!')
+            return 0.0, 0.0
 
         # lookahead_point = self._get_current_waypoint(path, self.lookahead_distance, position, pose_theta)
         # if lookahead_point is None:
         #     return self.safe_speed, 0.0
-        speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
+        # speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
         return speed, steering_angle
