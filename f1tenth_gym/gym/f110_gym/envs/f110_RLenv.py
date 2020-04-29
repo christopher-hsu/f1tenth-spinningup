@@ -372,7 +372,6 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         obs['lap_times'] = self.lap_times
         obs['lap_counts'] = self.lap_counts
 
-        reward = self.get_reward(obs)
         # update accumulated time in env
         self.current_time = self.current_time + self.timestep
         # TODO: donezo should be done in simulator? could be done here as well
@@ -384,7 +383,9 @@ class F110RLEnv(gym.Env, utils.EzPickle):
             done = self._check_done()
             info = {}
 
+        reward = self.get_reward(obs)
         self.obs = obs
+
         return self.obs, reward, done, info
 
     def get_reward(self, obs):
@@ -396,17 +397,9 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         
         if obs["collisions"][0] == True:
             reward += -500
-            # print("collision!!!!")
 
-        # if obs["lap_counts"][1] > obs["lap_counts"][0] and obs["lap_counts"][1] == 2:
-        #     reward += -1
-        # if obs["lap_counts"][0] > obs["lap_counts"][1] and obs["lap_counts"][0] == 2:
-        #     reward += 1
-            # print("WE WON!!")
-        print(obs['lap_counts'], obs['lap_times'])
         if obs["lap_counts"][0] >= 2 and obs["lap_counts"][1] >= 2:
             reward += 10* (obs["lap_times"][1] - obs["lap_times"][0])
-            print(obs["lap_times"])
 
         return reward
 
