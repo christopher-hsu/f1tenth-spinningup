@@ -334,7 +334,12 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
 
             # Save model
             if (epoch % save_freq == 0) or (epoch == epochs):
-                logger.save_state({'env': env}, None)
+                if epoch == epochs:
+                    logger.save_state({'env': env}, None)
+                elif epoch > 10:
+                    logger.save_state({'env': env}, epoch)
+                else:
+                    logger.save_state({'env': env}, None)
 
             # Test the performance of the deterministic version of the agent.
             test_agent()
