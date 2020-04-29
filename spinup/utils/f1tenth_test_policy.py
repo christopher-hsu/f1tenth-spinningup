@@ -150,7 +150,9 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
         if d or (ep_len == max_ep_len):
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             print('Episode %d \t EpRet %.3f \t EpLen %d'%(n, ep_ret, ep_len))
-            o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
+            o, r, d, ep_ret, ep_len = env.reset({'x': env_init['initial_x'],
+                                                 'y': env_init['initial_y'],
+                                                 'theta': env_init['initial_theta']}), 0, False, 0, 0
             n += 1
 
     logger.log_tabular('EpRet', with_min_and_max=True)
