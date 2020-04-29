@@ -45,7 +45,7 @@ class ReplayBuffer:
 def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
-        update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=5000, 
+        update_after=4000, update_every=1, num_test_episodes=10, max_ep_len=4000, 
         logger_kwargs=dict(), save_freq=1):
     """
     Soft Q-Network, based on SAC and clipped Double Q-learning
@@ -336,7 +336,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
             if (epoch % save_freq == 0) or (epoch == epochs):
                 if epoch == epochs:
                     logger.save_state({'env': env}, None)
-                elif epoch > 10:
+                elif epoch > epochs*0.75:
                     logger.save_state({'env': env}, epoch)
                 else:
                     logger.save_state({'env': env}, None)

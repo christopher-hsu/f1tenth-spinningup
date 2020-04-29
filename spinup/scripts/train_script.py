@@ -70,18 +70,21 @@ def main():
     sqn_pytorch(env_fn=env_fn, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
         ac_kwargs=ac_kwargs, steps_per_epoch=5000, epochs=args.epochs, 
         logger_kwargs=logger_kwargs, save_freq=args.checkpoint_freq, 
-        polyak=args.polyak, alpha=args.alpha, batch_size=args.batch)
-
+        polyak=args.polyak, alpha=args.alpha, batch_size=args.batch,
+        start_steps=args.start_steps, update_after=args.update_after,
+        )
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--epochs', type=int, default=20)
+    parser.add_argument('--epochs', type=int, default=40)
     parser.add_argument('--checkpoint_freq', type=int, default=2)
     parser.add_argument('--polyak', type=float, default=0.995)
     parser.add_argument('--alpha', type=float, default=0.2)
     parser.add_argument('--batch', type=int, default=100)
+    parser.add_argument('--start_steps', type=int, default=4000)
+    parser.add_argument('--update_after', type=int, default=4000)
     args = parser.parse_args()
     
     main()
