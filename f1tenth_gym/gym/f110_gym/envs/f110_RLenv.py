@@ -389,17 +389,30 @@ class F110RLEnv(gym.Env, utils.EzPickle):
 
     def get_reward(self, obs):
         # Reward function
+        reward = 0
 
-        reward = -self.timestep
+        if obs["lap_counts"][0] < 2:
+            reward += -self.timestep
+        
         if obs["collisions"][0] == True:
             reward += -500
-            print("collision!!!!!!!")
+            # print("collision!!!!")
+
+        # if obs["lap_counts"][1] > obs["lap_counts"][0] and obs["lap_counts"][1] == 2:
+        #     reward += -1
+        # if obs["lap_counts"][0] > obs["lap_counts"][1] and obs["lap_counts"][0] == 2:
+        #     reward += 1
+            # print("WE WON!!")
+        print(obs['lap_counts'], obs['lap_times'])
+        if obs["lap_counts"][0] >= 2 and obs["lap_counts"][1] >= 2:
+            reward += 10* (obs["lap_times"][1] - obs["lap_times"][0])
+            print(obs["lap_times"])
 
         return reward
 
 
     def reset(self, poses=None):
-
+        self.obs = {}
         self.current_time = 0.0
         self.in_collision = False
         self.collision_angles = None
@@ -407,6 +420,8 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         self.near_start = True
         self.near_starts = np.array([True]*self.num_agents)
         self.toggle_list = np.zeros((self.num_agents,))
+        self.lap_times = [0.0, 0.0]
+        self.lap_counts = [0, 0]
         if poses:
             pose_x = poses['x']
             pose_y = poses['y']

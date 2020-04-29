@@ -127,7 +127,7 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
     while n < num_episodes:
         if render:
             env.render()
-            time.sleep(1e-3)
+            # time.sleep(1e-3)
 
         #Convert o to RL obs 
         RLobs = ego_agent.process_obs(o)

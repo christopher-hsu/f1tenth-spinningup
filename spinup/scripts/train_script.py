@@ -1,4 +1,4 @@
-import pdb, argparse, os
+import pdb, argparse, os, datetime
 import torch
 import torch.nn as nn
 
@@ -55,7 +55,7 @@ def main():
     racecar_env.init_map(map_path, map_img_ext, False, False)
     racecar_env.update_params(mu, h_cg, l_r, cs_f, cs_r, I_z, mass, exec_dir, double_finish=True)
 
-    exp_name = 'tests'
+    exp_name = datetime.datetime.now().strftime("%m%d%H%M")
 
     # Wrappers
     # racecar_env = Display2D(racecar_env)
@@ -64,7 +64,7 @@ def main():
     env_fn = lambda : racecar_env
     
     #Training function
-    ac_kwargs = dict(hidden_sizes=[64,64], activation=nn.ReLU)
+    ac_kwargs = dict(hidden_sizes=[512,256,128], activation=nn.ReLU)
     logger_kwargs = dict(output_dir='data/sqn/'+exp_name, exp_name=exp_name)
 
     sqn_pytorch(env_fn=env_fn, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
