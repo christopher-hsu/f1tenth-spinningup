@@ -64,7 +64,7 @@ def main():
     env_fn = lambda : racecar_env
     
     #Training function
-    ac_kwargs = dict(hidden_sizes=[512,256,128], activation=nn.ReLU)
+    ac_kwargs = dict(hidden_sizes=[256,256,128], activation=nn.ReLU)
     logger_kwargs = dict(output_dir='data/sqn/'+exp_name, exp_name=exp_name)
 
     sqn_pytorch(env_fn=env_fn, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
