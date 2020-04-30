@@ -16,7 +16,7 @@ class PurePursuitAgent(Agent):
     def __init__(self, csv_path, wheelbase):
         super(PurePursuitAgent, self).__init__(csv_path)
         self.index = 0
-        self.lookahead_distance = 0.85
+        self.lookahead_distance = 1
         self.wheelbase = wheelbase
         self.waypoints = np.zeros((len(csv_path),1000,2))
         self.path_waypoints = np.zeros((len(csv_path),4))
@@ -27,22 +27,22 @@ class PurePursuitAgent(Agent):
             count += 1
 
  
-    def _get_current_waypoint(self, waypoint, lookahead_distance, position, theta):
+    # def _get_current_waypoint(self, waypoint, lookahead_distance, position, theta):
 
-        R_mat_ego = np.array([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
+    #     R_mat_ego = np.array([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
 
-        point_dist =  np.sqrt(np.sum(np.square(waypoint[:, 0:2]-position), axis=1))
-        point_index = np.where(abs(point_dist-lookahead_distance)< 0.20)[0]
-        #print(point_index)
-        for index in point_index:
-            l2_0 = [waypoint[index, 0]-position[0], waypoint[index,1]-position[1]]      #global frame
-            goalx_veh = math.cos(theta)*l2_0[0] + math.sin(theta)*l2_0[1]     #local frame
-            goaly_veh = -math.sin(theta)*l2_0[0] + math.cos(theta)*l2_0[1]    #lobal frame
+    #     point_dist =  np.sqrt(np.sum(np.square(waypoint[:, 0:2]-position), axis=1))
+    #     point_index = np.where(abs(point_dist-lookahead_distance)< 0.20)[0]
+    #     #print(point_index)
+    #     for index in point_index:
+    #         l2_0 = [waypoint[index, 0]-position[0], waypoint[index,1]-position[1]]      #global frame
+    #         goalx_veh = math.cos(theta)*l2_0[0] + math.sin(theta)*l2_0[1]     #local frame
+    #         goaly_veh = -math.sin(theta)*l2_0[0] + math.cos(theta)*l2_0[1]    #lobal frame
 
-            if abs(math.atan(goalx_veh/goaly_veh)) <  np.pi/2 and goalx_veh>0 :
-                 return waypoint[index]    #in global frame
-                 #print("point find ", index)
-        return None
+    #         if abs(math.atan(goalx_veh/goaly_veh)) <  np.pi/2 and goalx_veh>0 :
+    #              return waypoint[index]    #in global frame
+    #              #print("point find ", index)
+    #     return None
 
     def find_waypoints(self,current_position, current_theta):
 
@@ -164,24 +164,34 @@ class PurePursuitAgent(Agent):
     def get_actuation(self, pose_theta, lookahead_point, position):
         # waypoint_car = np.dot(get_rotation_matrix(-pose_theta), (lookahead_point[0:2]-position))
         # waypoint_y = waypoint_car[1]
-        waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
+        # waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
         
-        if np.abs(waypoint_y) < 1e-6:
-            return self.safe_speed, 0.
-        radius = 1/(2.0*waypoint_y/self.lookahead_distance**2)
-        steering_angle = np.arctan(self.wheelbase/radius)
+        # if np.abs(waypoint_y) < 1e-6:
+        #     return self.safe_speed, 0.
+        # radius = 1/(2.0*waypoint_y/self.lookahead_distance**2)
+        # steering_angle = np.arctan(self.wheelbase/radius)
+        # speed = self.select_velocity(steering_angle)
+
+        goal_veh= self.global_to_car(lookahead_point, position,pose_theta)
+
+        L = np.sqrt((lookahead_point[0]-position[0])**2 +  (lookahead_point[0]-position[1])**2 )
+
+        arc = 2*goal_veh[1]/(L**2)
+        angle = 0.33*arc
+        steering_angle = np.clip(angle, -0.4, 0.4)
         speed = self.select_velocity(steering_angle)
+
         return speed, steering_angle
 
 
     def select_velocity(self, angle):
-        if abs(angle) <= 5*math.pi/180:
+        if abs(angle) <= 5*np.pi/180:
             velocity  = 4
-        elif abs(angle) <= 10*math.pi/180:
+        elif abs(angle) <= 10*np.pi/180:
             velocity  = 4.0
-        elif abs(angle) <= 15*math.pi/180:
+        elif abs(angle) <= 15*np.pi/180:
             velocity = 4.0
-        elif abs(angle) <= 20*math.pi/180:
+        elif abs(angle) <= 20*np.pi/180:
             velocity = 4.0
         else:
             velocity = 3.0
@@ -203,7 +213,7 @@ class PurePursuitAgent(Agent):
             speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
         else:
             # raise Exception('Action is not accessible from here!')
-            return 0.0, 0.0
+            return 0.5, 0.0
 
         # lookahead_point = self._get_current_waypoint(path, self.lookahead_distance, position, pose_theta)
         # if lookahead_point is None:
