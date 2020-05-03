@@ -162,8 +162,6 @@ class PurePursuitAgent(Agent):
 
         
     def get_actuation(self, pose_theta, lookahead_point, position):
-        # waypoint_car = np.dot(get_rotation_matrix(-pose_theta), (lookahead_point[0:2]-position))
-        # waypoint_y = waypoint_car[1]
         # waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
         
         # if np.abs(waypoint_y) < 1e-6:
@@ -174,7 +172,7 @@ class PurePursuitAgent(Agent):
 
         goal_veh= self.global_to_car(lookahead_point, position,pose_theta)
 
-        L = np.sqrt((lookahead_point[0]-position[0])**2 +  (lookahead_point[0]-position[1])**2 )
+        L = np.sqrt((lookahead_point[0]-position[0])**2 +  (lookahead_point[1]-position[1])**2 )
 
         arc = 2*goal_veh[1]/(L**2)
         angle = 0.33*arc
@@ -207,7 +205,7 @@ class PurePursuitAgent(Agent):
         pose_y = obs['poses_y'][0]
         pose_theta = obs['poses_theta'][0]
         position = np.array([pose_x, pose_y])
-        
+
         if action in self.aval_paths:
             lookahead_point = self.path_waypoints[action,:2]
             speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
