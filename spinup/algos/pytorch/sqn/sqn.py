@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.optim import Adam
 import gym
-import time, os
+import time, os, random
 import spinup.algos.pytorch.sqn.core as core
 from spinup.utils.logx import EpochLogger
 from gym.spaces import Box, Discrete
@@ -281,9 +281,10 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         if t > start_steps:
             a = get_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=False)
         else:
-            a = env.action_space.sample()
-            while a not in ego_agent.aval_paths:
-                a = env.action_space.sample()
+            try:
+                a = random.choice(tuple(ego_agent.aval_paths))
+            except: #happens when there are no paths available
+                a = 7
 
         #RL action to drive control actions
         ego_speed, ego_steer = ego_agent.plan(o, a)

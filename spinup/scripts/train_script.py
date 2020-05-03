@@ -58,7 +58,7 @@ def main():
     exp_name = datetime.datetime.now().strftime("%m%d%H%M")
 
     # Wrappers
-    # racecar_env = Display2D(racecar_env)
+    # racecar_env = Display2D(racecar_env, map_path, map_img_ext, False, False)
 
     # Create env function
     env_fn = lambda : racecar_env

@@ -58,7 +58,11 @@ class MLPActionSelector(nn.Module):
             mu = torch.argmax(pi_log)
             pi_action = mu      
         else:
-            pi_action = torch.multinomial(pi_log,1)
+            try:
+                pi_action = torch.multinomial(pi_log,1)
+            except: #This case happens if no paths are available -> 0.5 vel and 0 steer, force it crash and learn
+                pi_action = torch.argmax(pi_log, dim=1, keepdim=True)   
+                pi_action = (torch.ones([pi_log.shape[0],1]) * 7).type(torch.long)
 
         if with_logprob:
             logp_pi = torch.gather(pi_log,1,pi_action)
