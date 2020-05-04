@@ -247,21 +247,24 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
                                 'theta': env_init['initial_theta']})
             #Convert o to RL obs 
             RLobs = ego_agent.process_obs(o)
+            Oppobs = opp_agent.process_obs(o)
 
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
                 a = get_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=True)
-
                 #RL action to drive control actions
                 ego_speed, ego_steer = ego_agent.plan(o, a)
-                #Opponent decision
-                opp_speed, opp_steer = opp_agent.plan(o)
 
+                #Opponent decision
+                a_opp = opp_action(Oppobs, action_mask=opp_agent.aval_paths, deterministic=True)
+                opp_speed, opp_steer = opp_agent.plan(o, a_opp)
+                #Action dict
                 action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
 
                 o, r, d, _ = test_env.step(action)
                 #Convert o to RL obs 
                 RLobs = ego_agent.process_obs(o)
+                Oppobs = opp_agent.process_obs(o)
                 ep_ret += r
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
@@ -274,6 +277,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
                                    'theta': env_init['initial_theta']}), 0, 0
     #Convert o to RL obs 
     RLobs = ego_agent.process_obs(o)
+    Oppobs = opp_agent.process_obs(o)
 
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
@@ -287,14 +291,16 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
             try:
                 a = random.choice(tuple(ego_agent.aval_paths))
             except: #happens when there are no paths available
-                a = 7
+                a = 15
 
         #RL action to drive control actions
         ego_speed, ego_steer = ego_agent.plan(o, a)
         #Opponent decision
-        opp_speed, opp_steer = opp_agent.plan(o, a)
+        a_opp = opp_action(Oppobs, action_mask=opp_agent.aval_paths, deterministic=True)
+        opp_speed, opp_steer = opp_agent.plan(o, a_opp)
+        #Action dict
         action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
-        
+
         # Step the env
         o2, r, d, _ = env.step(action)
         ep_ret += r
@@ -302,6 +308,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
 
         #Convert o2 to RLobs2
         RLobs2 = ego_agent.process_obs(o2)
+        Oppobs2 = opp_agent.process_obs(o2)
 
         # Ignore the "done" signal if it comes from hitting the time
         # horizon (that is, when it's an artificial terminal signal
@@ -315,6 +322,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
         # Super critical, easy to overlook step: make sure to update 
         # most recent observation!
         RLobs = RLobs2
+        Oppobs = Oppobs2
         o = o2
 
         # End of trajectory handling
@@ -325,6 +333,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
                                            'theta': env_init['initial_theta']}), 0, 0
             #Convert o to RL obs 
             RLobs = ego_agent.process_obs(o)
+            Oppobs = opp_agent.process_obs(o)
 
         # Update handling
         if t >= update_after and t % update_every == 0:
