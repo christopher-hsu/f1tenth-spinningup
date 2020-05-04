@@ -211,7 +211,7 @@ class PurePursuitAgent(Agent):
             speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
         else:
             # raise Exception('Action is not accessible from here!')
-            return 0.5, 0.0
+            return 0.0, 0.0
 
         # lookahead_point = self._get_current_waypoint(path, self.lookahead_distance, position, pose_theta)
         # if lookahead_point is None:

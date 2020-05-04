@@ -2,9 +2,9 @@ import pdb, argparse, json, os
 import gym
 from gym import wrappers
 from race_agents.ego_agent.agents2 import PurePursuitAgent as EgoPurePursuit
-from race_agents.opp_agent.agents import PurePursuitAgent as OppPurePursuit
+from race_agents.opp_agent.agents2 import PurePursuitAgent as OppPurePursuit
 from spinup.visualize.display_wrapper import Display2D
-from spinup.utils.f1tenth_test_policy import load_pytorch_policy, run_policy
+from spinup.utils.f1tenth_test_policy import load_pytorch_policy, run_adversarial_policy
 BASE_DIR = os.path.dirname('/'.join(str.split(os.path.realpath(__file__),'/')[:-2]))
 
 def main():
@@ -37,27 +37,26 @@ def main():
     ego_csv_paths = []
     for num in path_nums:
         ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths2/multiwp%d.csv'%(num))
-
     ego_csv_paths.append(BASE_DIR + '/race_agents/ego_agent/waypoints/Multi-Paths2/multiwp-opt.csv') ## adding the opt path
 
     ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase2)
+    ego_action = load_pytorch_policy(args.path, itr=args.itr, deterministic=True)
 
     #Params for opponent agent
-    opp_csv_path = BASE_DIR + '/race_agents/opp_agent/skirk.csv'
-    opp_agent = OppPurePursuit(opp_csv_path, wheelbase)
+    opp_agent = OppPurePursuit(ego_csv_paths, wheelbase2)
+    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy'
+    opp_action = load_pytorch_policy(opp_policy_paths, deterministic=True)
 
     # init gym backend
     racecar_env.init_map(map_path, map_img_ext, False, False)
     racecar_env.update_params(mu, h_cg, l_r, cs_f, cs_r, I_z, mass, exec_dir, double_finish=True)
 
-
     # Wrappers
     racecar_env = Display2D(racecar_env, map_path, map_img_ext, False, False)
 
-
-    get_action = load_pytorch_policy(args.path, itr=args.itr, deterministic=args.deterministic)
-    run_policy(racecar_env, get_action, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
-                    num_episodes=args.num_episodes, render=args.render)
+    run_adversarial_policy(racecar_env, ego_action, opp_action, env_init=initialization, 
+                    ego_agent=ego_agent, opp_agent=opp_agent, num_episodes=args.num_episodes, 
+                    render=args.render)
 
 
 if __name__ == '__main__':

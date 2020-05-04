@@ -242,7 +242,8 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
     def test_agent():
         for j in range(num_test_episodes):
             d, ep_ret, ep_len = False, 0, 0
-            o = test_env.reset({'x': env_init['initial_x'],
+            init_positions = np.random.random_integers(0,1)
+            o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'][init_positions],
                                 'y': env_init['initial_y'],
                                 'theta': env_init['initial_theta']})
             #Convert o to RL obs 
@@ -269,7 +270,8 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
     start_time = time.time()
-    o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'],
+    init_positions = np.random.random_integers(0,1)
+    o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'][init_positions],
                                    'y': env_init['initial_y'],
                                    'theta': env_init['initial_theta']}), 0, 0
     #Convert o to RL obs 
@@ -320,7 +322,8 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         # End of trajectory handling
         if d or (ep_len == max_ep_len):
             logger.store(EpRet=ep_ret, EpLen=ep_len)
-            o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'],
+            init_positions = np.random.random_integers(0,1)
+            o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'][init_positions],
                                            'y': env_init['initial_y'],
                                            'theta': env_init['initial_theta']}), 0, 0
             #Convert o to RL obs 

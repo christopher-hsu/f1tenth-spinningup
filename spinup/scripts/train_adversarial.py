@@ -21,7 +21,7 @@ def main():
 
     # Initial state for ego and opp
     initialization = {}
-    initialization['initial_x'] = [0.0, 2.0]
+    initialization['initial_x'] = [[0.0, 2.0],[2.0, 0.0]]
     initialization['initial_y'] = [0.0, 0.0]
     initialization['initial_theta'] = [0.0, 0.0]
     lap_time = 0.0
