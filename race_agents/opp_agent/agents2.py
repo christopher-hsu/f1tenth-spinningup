@@ -94,8 +94,14 @@ class PurePursuitAgent(Agent):
         obs_array = np.zeros((256,))
 
         obs_array[239:] = 10 ## If lane is not accessible, this is the default distance to it
+        """
+            Main difference in this oppenent agent file
+            Uses the second car's lidar scans.
+            And positions are the opponent poses.
+            "our" frame is the opponent
 
-        ranges = np.array(list(obs['scans'][0]))
+        """
+        ranges = np.array(list(obs['scans'][1]))
         angles = np.linspace(-4.7/2., 4.7/2., num=ranges.shape[0])
 
         min_idx = int(((-100)*(np.pi/180)-angles[0])/(angles[1]-angles[0]))
@@ -114,38 +120,39 @@ class PurePursuitAgent(Agent):
         ## lets get other cars orientation with respect us
 
         ## opp position global to our frame
-        our_position = np.array([obs['poses_x'][0],obs['poses_y'][0]])
+        ego_position = np.array([obs['poses_x'][0],obs['poses_y'][0]])
         opp_car_global = np.array([obs['poses_x'][1],obs['poses_y'][1]])
 
-        opp_car_global = opp_car_global - our_position
+        # opp_car_global = opp_car_global - ego_position
+        ego_car_global = ego_position - opp_car_global
 
-        R_mat = np.array([[np.cos(obs['poses_theta'][0]),np.sin(obs['poses_theta'][0])],
-            [-np.sin(obs['poses_theta'][0]),np.cos(obs['poses_theta'][0])]])
+        R_mat = np.array([[np.cos(obs['poses_theta'][1]),np.sin(obs['poses_theta'][1])],
+            [-np.sin(obs['poses_theta'][1]),np.cos(obs['poses_theta'][1])]])
 
-        pos_opp_our_frame  = np.dot(opp_car_global,R_mat.T)  ## shape (1,2) that gives their position wrt us
-        theta_opp_our_frame = obs['poses_theta'][0] - obs['poses_theta'][1]  # one value that gives their theta wrt us
-        obs_array[num_subsample*2:(num_subsample*2)+2] = pos_opp_our_frame
-        obs_array[(num_subsample*2)+2:(num_subsample*2)+3] = theta_opp_our_frame
+        pos_ego_our_frame  = np.dot(ego_car_global,R_mat.T)  ## shape (1,2) that gives their position wrt us
+        theta_ego_our_frame = obs['poses_theta'][1] - obs['poses_theta'][0]   # one value that gives their theta wrt us
+        obs_array[num_subsample*2:(num_subsample*2)+2] = pos_ego_our_frame
+        obs_array[(num_subsample*2)+2:(num_subsample*2)+3] = theta_ego_our_frame
 
         ## Now their velocity with respect to us
 
         # first their velocity to global frame:
-        vel_opp_frame = np.array([obs['linear_vels_x'][1],0])
-        R_mat_opp = np.array([[np.cos(obs['poses_theta'][1]),np.sin(obs['poses_theta'][1])],
-            [-np.sin(obs['poses_theta'][1]),np.cos(obs['poses_theta'][1])]])
+        vel_ego_frame = np.array([obs['linear_vels_x'][0],0])
+        R_mat_ego = np.array([[np.cos(obs['poses_theta'][0]),np.sin(obs['poses_theta'][0])],
+            [-np.sin(obs['poses_theta'][0]),np.cos(obs['poses_theta'][0])]])
 
-        vel_opp_global  = np.dot(vel_opp_frame,R_mat_opp)
+        vel_ego_global  = np.dot(vel_ego_frame,R_mat_ego)
 
-        # Opp velocity global to our local frame:
+        # Ego velocity global to our local frame:
 
-        vel_opp_our_frame  = np.dot(vel_opp_global,R_mat.T) ## shape (1,2) that gives their velocity wrt us
+        vel_ego_our_frame  = np.dot(vel_ego_global,R_mat.T) ## shape (1,2) that gives their velocity wrt us
 
-        obs_array[(num_subsample*2)+3:(num_subsample*2)+5] = vel_opp_our_frame
+        obs_array[(num_subsample*2)+3:(num_subsample*2)+5] = vel_ego_our_frame
 
 
         ## Now we gotta find our distance to each lane including optimal lane
 
-        self.find_waypoints(our_position, obs['poses_theta'][0]) ## finds the waypoints from all paths and also find available paths
+        self.find_waypoints(opp_car_global, obs['poses_theta'][1]) ## finds the waypoints from all paths and also find available paths
 
         for path in self.aval_paths:
             point1 = self.path_waypoints[path,:2]
@@ -154,7 +161,7 @@ class PurePursuitAgent(Agent):
             denom = np.sqrt((point2[1]-point1[1])**2 + (point2[0]-point1[0])**2)
             if denom == 0:
                 continue
-            num = np.abs(((point2[1]-point1[1])*our_position[0]) - ((point2[0]-point1[0])*our_position[1]) + (point2[0]*point1[1]) - (point2[1]*point1[0]))
+            num = np.abs(((point2[1]-point1[1])*ego_position[0]) - ((point2[0]-point1[0])*ego_position[1]) + (point2[0]*point1[1]) - (point2[1]*point1[0]))
 
             obs_array[((num_subsample*2)+5) + path] = num/denom
 
