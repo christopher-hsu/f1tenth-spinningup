@@ -292,7 +292,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
         #RL action to drive control actions
         ego_speed, ego_steer = ego_agent.plan(o, a)
         #Opponent decision
-        opp_speed, opp_steer = opp_agent.plan(o)
+        opp_speed, opp_steer = opp_agent.plan(o, a)
         action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
         
         # Step the env

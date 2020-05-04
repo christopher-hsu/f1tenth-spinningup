@@ -10,7 +10,7 @@ from spinup import sqn_adversarial
 from spinup.utils.f1tenth_test_policy import load_pytorch_policy
 #Agents
 from race_agents.ego_agent.agents2 import PurePursuitAgent as EgoPurePursuit
-from race_agents.ego_agent.agents2 import PurePursuitAgent as OppPurePursuit
+from race_agents.opp_agent.agents2 import PurePursuitAgent as OppPurePursuit
 # from race_agents.opp_agent.agents import PurePursuitAgent as OppPurePursuit
 
 BASE_DIR = os.path.dirname('/'.join(str.split(os.path.realpath(__file__),'/')[:-2]))
