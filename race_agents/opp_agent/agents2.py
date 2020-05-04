@@ -208,9 +208,10 @@ class PurePursuitAgent(Agent):
         #Choose the path to follow
         # path = self.waypoints[action]      
         
-        pose_x = obs['poses_x'][0]
-        pose_y = obs['poses_y'][0]
-        pose_theta = obs['poses_theta'][0]
+        #Opponent plan
+        pose_x = obs['poses_x'][1]
+        pose_y = obs['poses_y'][1]
+        pose_theta = obs['poses_theta'][1]
         position = np.array([pose_x, pose_y])
 
         if action in self.aval_paths:
@@ -218,7 +219,7 @@ class PurePursuitAgent(Agent):
             speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
         else:
             # raise Exception('Action is not accessible from here!')
-            return 0.5, 0.0
+            return 0.0, 0.0
 
         # lookahead_point = self._get_current_waypoint(path, self.lookahead_distance, position, pose_theta)
         # if lookahead_point is None:
