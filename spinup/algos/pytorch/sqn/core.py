@@ -36,7 +36,8 @@ class MLPActionSelector(nn.Module):
         self.alpha = alpha
         self.act_dim = act_dim
 
-        self.softmax = nn.Softmax(dim=1)
+        # self.softmax = nn.Softmax(dim=1)
+        self.logsoftmax = nn.LogSoftmax(dim=1)
 
 
     def forward(self, q, action_mask, deterministic=False, with_logprob=True):
@@ -52,17 +53,22 @@ class MLPActionSelector(nn.Module):
             q_soft = q_soft.unsqueeze(0)
             q_soft[:, mask] = -float("Inf")
 
-        pi_log = self.softmax(q_soft)
+        # pi_log = self.softmax(q_soft)
+        pi_log = self.logsoftmax(q_soft)
 
         if deterministic:
             mu = torch.argmax(pi_log)
             pi_action = mu      
         else:
-            try:
-                pi_action = torch.multinomial(pi_log,1)
-            except: #This case happens if no paths are available -> 0.5 vel and 0 steer, force it crash and learn
-                pi_action = torch.argmax(pi_log, dim=1, keepdim=True)   
-                pi_action = (torch.ones([pi_log.shape[0],1]) * 7).type(torch.long)
+            # try:
+                # pi_action = torch.multinomial(pi_log,1)
+            q_log_dist = torch.distributions.multinomial.Multinomial(1, logits=pi_log)
+            action = q_log_dist.sample()
+            pi_action = torch.argmax(action, dim=1, keepdim=True)
+
+            # except: #This case happens if no paths are available -> 0.5 vel and 0 steer, force it crash and learn
+            #     pi_action = torch.argmax(pi_log, dim=1, keepdim=True)   
+            #     pi_action = (torch.ones([pi_log.shape[0],1]) * 7).type(torch.long)
 
         if with_logprob:
             logp_pi = torch.gather(pi_log,1,pi_action)
