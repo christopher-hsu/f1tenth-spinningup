@@ -46,7 +46,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=4000, update_every=1, num_test_episodes=10, max_ep_len=4000, 
-        logger_kwargs=dict(), save_freq=1):
+        logger_kwargs=dict(), save_freq=1, lr_period=0.7):
     """
     Soft Q-Network, based on SAC and clipped Double Q-learning
 
@@ -214,7 +214,10 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
     # Set up model saving
     logger.setup_pytorch_saver(ac)
 
-    def update(data):
+    def update(data, lr_iter):
+        # Update learning rate with cosine schedule
+        lr = np.clip(0.0005*np.cos(np.pi*lr_iter/(total_steps*lr_period))+0.000501, 1e-3, 1e-6)
+        q_optimizer.param_groups[0]['lr'] = lr
         # First run one gradient descent step for Q1 and Q2
         q_optimizer.zero_grad()
         loss_q, q_info = compute_loss_q(data)
@@ -326,8 +329,14 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         # Update handling
         if t >= update_after and t % update_every == 0:
             for j in range(update_every):
+                #Cosine learning rate schedule
+                if t < total_steps*(1-lr_period):
+                    lr_iter = 0
+                else:
+                    lr_iter = t-total_steps*(1-lr_period)
+
                 batch = replay_buffer.sample_batch(batch_size)
-                update(data=batch)
+                update(data=batch, lr_iter=lr_iter)
 
         # End of epoch handling
         if (t+1) % steps_per_epoch == 0:
