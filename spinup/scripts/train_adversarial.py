@@ -68,7 +68,7 @@ def main():
     
     #Training function
     ac_kwargs = dict(hidden_sizes=[256,256,128], activation=nn.ReLU)
-    logger_kwargs = dict(output_dir='data/sqnADV/'+exp_name, exp_name=exp_name)
+    logger_kwargs = dict(output_dir='data/advsqn/'+exp_name, exp_name=exp_name)
 
     sqn_adversarial(env_fn=env_fn, env_init=initialization, ego_agent=ego_agent, 
         opp_agent=opp_agent, opp_action=get_action,
