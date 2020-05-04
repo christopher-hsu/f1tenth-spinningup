@@ -396,10 +396,10 @@ class F110RLEnv(gym.Env, utils.EzPickle):
             reward += -self.timestep
         
         if obs["collisions"][0] == True:
-            reward += -500
+            reward = -100
 
         if obs["lap_counts"][0] >= 2 and obs["lap_counts"][1] >= 2:
-            reward += 10* (obs["lap_times"][1] - obs["lap_times"][0])
+            reward += 1* (obs["lap_times"][1] - obs["lap_times"][0])
 
         return reward
 
