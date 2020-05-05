@@ -110,7 +110,6 @@ class PurePursuitAgent(Agent):
         # obs_array[:num_subsample*2] = lidar_our_frame
 
 
-
         ## lets get other cars orientation with respect us
 
         ## opp position global to our frame
@@ -203,6 +202,7 @@ class PurePursuitAgent(Agent):
 
         current_TTC = self.find_TTC(goal_veh)
 
+        newaction = -1
         if TTC == True:
             ##TTC avoidance
             if current_TTC <= self.TTC_threshold:
@@ -212,10 +212,10 @@ class PurePursuitAgent(Agent):
                     goal_vals[path_idx]= self.global_to_car(self.path_waypoints[path_idx,:2],position, pose_theta)
                     Path_TTC_vals[path_idx] = self.find_TTC(goal_vals[path_idx])
 
-                test = max(Path_TTC_vals, key=Path_TTC_vals.get)
-                # print('Chose: ', test)
-                lookahead_point =self.path_waypoints[test,:2]
-                goal_veh= goal_vals[test]
+                newaction = max(Path_TTC_vals, key=Path_TTC_vals.get)
+                # print('Chose: ', newaction)
+                lookahead_point =self.path_waypoints[newaction,:2]
+                goal_veh= goal_vals[newaction]
 
         L = np.sqrt((lookahead_point[0]-position[0])**2 +  (lookahead_point[1]-position[1])**2 )
 
@@ -226,8 +226,7 @@ class PurePursuitAgent(Agent):
         steering_angle = np.clip(angle, -0.4, 0.4)
         speed = self.select_velocity(steering_angle)
 
-        return speed, steering_angle
-
+        return speed, steering_angle, newaction
 
     def select_velocity(self, angle):
         if abs(angle) <= 5*math.pi/180:
@@ -256,8 +255,11 @@ class PurePursuitAgent(Agent):
         if action in self.aval_paths:
             lookahead_point = self.path_waypoints[action,:2]
             speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
+            ## If action was adjusted with TTC
+            if newaction != -1:
+                action = newaction
         else:
             # raise Exception('Action is not accessible from here!')
-            return 0.0, 0.0
+            return 0.0, 0.0, action
 
-        return speed, steering_angle
+        return speed, steering_angle, action
