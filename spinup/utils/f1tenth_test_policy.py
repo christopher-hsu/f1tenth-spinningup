@@ -190,12 +190,11 @@ def run_adversarial_policy(env, ego_action, opp_action, env_init, ego_agent, opp
 
         # Take deterministic actions at test time 
         a = ego_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=True)
-        ego_speed, ego_steer = ego_agent.plan(o, a)
+        ego_speed, ego_steer, a = ego_agent.plan(o, a)
 
         #Opponent decision
         a_opp = opp_action(Oppobs, action_mask=opp_agent.aval_paths, deterministic=True)
-
-        opp_speed, opp_steer = opp_agent.plan(o, a_opp)
+        opp_speed, opp_steer, _ = opp_agent.plan(o, a_opp)
 
         action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
 
