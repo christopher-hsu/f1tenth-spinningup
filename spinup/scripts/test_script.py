@@ -57,7 +57,7 @@ def main():
 
     get_action = load_pytorch_policy(args.path, itr=args.itr, deterministic=args.deterministic)
     run_policy(racecar_env, get_action, env_init=initialization, ego_agent=ego_agent, opp_agent=opp_agent, 
-                    num_episodes=args.num_episodes, render=args.render)
+                    num_episodes=args.num_episodes, render=bool(args.render))
 
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--itr', type=str, default='')
     parser.add_argument('--deterministic', type=bool, default=True)
     parser.add_argument('--num_episodes', type=int, default=100)
-    parser.add_argument('--render', type=bool, default=True)
+    parser.add_argument('--render', type=int, default=1)
     args = parser.parse_args()
 
     config_path = args.path + 'config.json'
