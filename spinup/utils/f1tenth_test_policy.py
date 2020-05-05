@@ -127,7 +127,7 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
                    'y': env_init['initial_y'],
                    'theta': env_init['initial_theta']})
     while n < num_episodes:
-        if render:
+        if render == True:
             env.render()
             # time.sleep(1e-3)
 
@@ -180,7 +180,7 @@ def run_adversarial_policy(env, ego_action, opp_action, env_init, ego_agent, opp
                    'y': env_init['initial_y'],
                    'theta': env_init['initial_theta']})
     while n < num_episodes:
-        if render:
+        if render == True:
             env.render()
             # time.sleep(1e-3)
 
