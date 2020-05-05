@@ -254,7 +254,7 @@ class PurePursuitAgent(Agent):
 
         if action in self.aval_paths:
             lookahead_point = self.path_waypoints[action,:2]
-            speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
+            speed, steering_angle, newaction = self.get_actuation(pose_theta, lookahead_point, position)
             ## If action was adjusted with TTC
             if newaction != -1:
                 action = newaction
