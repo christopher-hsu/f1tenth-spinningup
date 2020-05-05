@@ -68,7 +68,7 @@ class MLPActionSelector(nn.Module):
 
             except: #This case happens if no paths are available -> 0.5 vel and 0 steer, force it crash and learn
                 pi_action = torch.argmax(pi_log, dim=1, keepdim=True)   
-                pi_action = (torch.ones([pi_log.shape[0],1]) * 7).type(torch.long)
+                pi_action = (torch.ones([pi_log.shape[0],1]) * 15).type(torch.long)
 
         if with_logprob:
             logp_pi = torch.gather(pi_log,1,pi_action)
