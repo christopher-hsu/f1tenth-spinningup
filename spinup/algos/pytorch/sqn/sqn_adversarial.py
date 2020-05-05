@@ -254,11 +254,11 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
                 # Take deterministic actions at test time 
                 a = get_action(RLobs, action_mask=ego_agent.aval_paths, deterministic=True)
                 #RL action to drive control actions
-                ego_speed, ego_steer = ego_agent.plan(o, a)
+                ego_speed, ego_steer, a = ego_agent.plan(o, a)
 
                 #Opponent decision
                 a_opp = opp_action(Oppobs, action_mask=opp_agent.aval_paths, deterministic=True)
-                opp_speed, opp_steer = opp_agent.plan(o, a_opp)
+                opp_speed, opp_steer, _ = opp_agent.plan(o, a_opp)
                 #Action dict
                 action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
 
@@ -296,10 +296,10 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
                 a = 15
 
         #RL action to drive control actions
-        ego_speed, ego_steer = ego_agent.plan(o, a)
+        ego_speed, ego_steer, a = ego_agent.plan(o, a)
         #Opponent decision
         a_opp = opp_action(Oppobs, action_mask=opp_agent.aval_paths, deterministic=True)
-        opp_speed, opp_steer = opp_agent.plan(o, a_opp)
+        opp_speed, opp_steer, _ = opp_agent.plan(o, a_opp)
         #Action dict
         action = {'ego_idx': 0, 'speed': [ego_speed, opp_speed], 'steer': [ego_steer, opp_steer]}
 

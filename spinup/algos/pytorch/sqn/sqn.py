@@ -243,9 +243,9 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         for j in range(num_test_episodes):
             d, ep_ret, ep_len = False, 0, 0
             init_positions = np.random.random_integers(0,1)
-            o = env.reset({'x': env_init['initial_x'][init_positions],
-                                           'y': env_init['initial_y'],
-                                           'theta': env_init['initial_theta']})
+            o = test_env.reset({'x': env_init['initial_x'][init_positions],
+                                'y': env_init['initial_y'],
+                                'theta': env_init['initial_theta']})
             #Convert o to RL obs 
             RLobs = ego_agent.process_obs(o)
 

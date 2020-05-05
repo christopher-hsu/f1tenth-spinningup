@@ -17,6 +17,9 @@ class PurePursuitAgent(Agent):
         super(PurePursuitAgent, self).__init__(csv_path)
         self.index = 0
         self.lookahead_distance = 1
+        self.safety_radius = 0.15
+        self.TTC_threshold= 0.65
+        self.minTTCspeed = 3.0
         self.wheelbase = wheelbase
         self.waypoints = np.zeros((len(csv_path),1000,2))
         self.path_waypoints = np.zeros((len(csv_path),4))
@@ -25,24 +28,6 @@ class PurePursuitAgent(Agent):
         for path in csv_path:
             self.waypoints[count,:,:] = np.loadtxt(path, ndmin=2,delimiter=',')
             count += 1
-
- 
-    # def _get_current_waypoint(self, waypoint, lookahead_distance, position, theta):
-
-    #     R_mat_ego = np.array([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
-
-    #     point_dist =  np.sqrt(np.sum(np.square(waypoint[:, 0:2]-position), axis=1))
-    #     point_index = np.where(abs(point_dist-lookahead_distance)< 0.20)[0]
-    #     #print(point_index)
-    #     for index in point_index:
-    #         l2_0 = [waypoint[index, 0]-position[0], waypoint[index,1]-position[1]]      #global frame
-    #         goalx_veh = math.cos(theta)*l2_0[0] + math.sin(theta)*l2_0[1]     #local frame
-    #         goaly_veh = -math.sin(theta)*l2_0[0] + math.cos(theta)*l2_0[1]    #lobal frame
-
-    #         if abs(math.atan(goalx_veh/goaly_veh)) <  np.pi/2 and goalx_veh>0 :
-    #              return waypoint[index]    #in global frame
-    #              #print("point find ", index)
-    #     return None
 
     def find_waypoints(self,current_position, current_theta):
 
@@ -86,31 +71,38 @@ class PurePursuitAgent(Agent):
         Returns:
             obs_array: (numpy array shape (256,)) I also find waypoints and available paths here
         '''
-
+        self.speed = obs['linear_vels_x'][0]
         ## First lets subsample from the lidar: lets do
 
         num_subsample = 117
+        # num_subsample = 234
 
         obs_array = np.zeros((256,))
 
         obs_array[239:] = 10 ## If lane is not accessible, this is the default distance to it
 
         ranges = np.array(list(obs['scans'][0]))
-        angles = np.linspace(-4.7/2., 4.7/2., num=ranges.shape[0])
+        self.angles = np.linspace(-4.7/2., 4.7/2., num=ranges.shape[0])
 
-        min_idx = int(((-100)*(np.pi/180)-angles[0])/(angles[1]-angles[0]))
-        max_idx = int(((100)*(np.pi/180)-angles[0])/(angles[1]-angles[0]))
+        min_idx = int(((-100)*(np.pi/180)-self.angles[0])/(self.angles[1]-self.angles[0]))
+        max_idx = int(((100)*(np.pi/180)-self.angles[0])/(self.angles[1]-self.angles[0]))
 
-        # lidar_idxs = np.random.randint(min_idx,max_idx,num_subsample)
-        lidar_idxs = np.linspace(min_idx,max_idx,num=num_subsample).astype(int) #subsample lidar
+        lidar_idxs = np.linspace(min_idx,max_idx,num=num_subsample*2).astype(int) #subsample lidar
+        obs_array[:num_subsample*2] = ranges[lidar_idxs]
 
-        lidar_xy_our_frame = np.zeros((num_subsample,2))
 
-        lidar_xy_our_frame[:,0] = (ranges[lidar_idxs] * np.cos(angles[lidar_idxs]))
-        lidar_xy_our_frame[:,1] = (ranges[lidar_idxs] * np.sin(angles[lidar_idxs]))
+        ## Lidar in xy local coordinates
+        # lidar_our_frame = np.zeros((num_subsample))
+        # lidar_our_frame = ranges[lidar_idxs]
 
-        lidar_our_frame = lidar_xy_our_frame.flatten()  ## Sampled lidar readings shape (num_subsample*2,)
-        obs_array[:num_subsample*2] = lidar_our_frame
+        # lidar_idxs = np.linspace(min_idx,max_idx,num=num_subsample).astype(int) #subsample lidar
+        # lidar_xy_our_frame = np.zeros((num_subsample,2))
+        # lidar_xy_our_frame[:,0] = (ranges[lidar_idxs] * np.cos(angles[lidar_idxs]))
+        # lidar_xy_our_frame[:,1] = (ranges[lidar_idxs] * np.sin(angles[lidar_idxs]))
+        # lidar_our_frame = lidar_xy_our_frame.flatten()  ## Sampled lidar readings shape (num_subsample*2,)
+        # obs_array[:num_subsample*2] = lidar_our_frame
+
+
         ## lets get other cars orientation with respect us
 
         ## opp position global to our frame
@@ -160,61 +152,120 @@ class PurePursuitAgent(Agent):
 
         return obs_array
 
-        
-    def get_actuation(self, pose_theta, lookahead_point, position):
-        # waypoint_y = np.dot(np.array([np.sin(-pose_theta), np.cos(-pose_theta)]), lookahead_point[0:2]-position)
-        
-        # if np.abs(waypoint_y) < 1e-6:
-        #     return self.safe_speed, 0.
-        # radius = 1/(2.0*waypoint_y/self.lookahead_distance**2)
-        # steering_angle = np.arctan(self.wheelbase/radius)
-        # speed = self.select_velocity(steering_angle)
 
-        goal_veh= self.global_to_car(lookahead_point, position,pose_theta)
+    def find_TTC(self,waypoint):
+        goalx_veh = waypoint[0]
+        goaly_veh = waypoint[1]
+
+        waypoint_angle_car = np.arctan(goaly_veh/goalx_veh)
+
+
+        waypoint_angle_car_idx = int((waypoint_angle_car+np.pi)/(self.angles[1]-self.angles[0]))
+        waypoint_angle_car_idx = np.minimum(waypoint_angle_car_idx,self.ranges.shape[0]-1)
+        waypoint_angle_car_idx = np.maximum(waypoint_angle_car_idx,0)
+        min_val = self.ranges[waypoint_angle_car_idx]
+
+        angle_circle = np.arctan(self.safety_radius/min_val)
+
+        if waypoint_angle_car<0:
+            min_idx = int((waypoint_angle_car-angle_circle-self.angles[0])/(self.angles[1]-self.angles[0]))
+            max_idx = int((waypoint_angle_car+angle_circle-self.angles[0])/(self.angles[1]-self.angles[0]))
+            # print('min ', min_idx, ' ', max_idx)
+        else:
+            min_idx = int((waypoint_angle_car-angle_circle-self.angles[0])/(self.angles[1]-self.angles[0]))
+            max_idx = int((waypoint_angle_car+angle_circle-self.angles[0])/(self.angles[1]-self.angles[0]))
+
+        lower_idx_0 = np.maximum(min_idx,0)    ##Look into this because of wrapping
+        upper_idx_0 = np.minimum(max_idx,self.ranges.shape[0]-1)  ##Look into this because of wrapping
+
+        TTC_denom = (np.maximum(self.minTTCspeed, self.speed)*np.cos(self.angles[lower_idx_0:upper_idx_0]))
+
+        TTC_denom[TTC_denom<=0] = 0.00000001
+
+        TTC_vals = self.ranges[lower_idx_0:upper_idx_0]/TTC_denom
+
+        TTC_min = np.amin(TTC_vals)
+
+        return TTC_min
+
+        
+    def get_actuation(self, pose_theta, lookahead_point, position, TTC=True):
+
+        goal_veh= self.global_to_car(lookahead_point, position, pose_theta)
+
+        newaction = -1
+        if TTC == True:
+            ##TTC avoidance
+            current_TTC = self.find_TTC(goal_veh)
+            if current_TTC <= self.TTC_threshold:
+                Path_TTC_vals = {}
+                goal_vals = {}
+                for path_idx in self.aval_paths:
+                    goal_vals[path_idx]= self.global_to_car(self.path_waypoints[path_idx,:2],position, pose_theta)
+                    Path_TTC_vals[path_idx] = self.find_TTC(goal_vals[path_idx])
+
+                newaction = max(Path_TTC_vals, key=Path_TTC_vals.get)
+                # print('Chose: ', newaction)
+                lookahead_point =self.path_waypoints[newaction,:2]
+                goal_veh= goal_vals[newaction]
+
 
         L = np.sqrt((lookahead_point[0]-position[0])**2 +  (lookahead_point[1]-position[1])**2 )
 
+        if np.abs(L) < 1e-6:
+            return self.safe_speed, 0.
         arc = 2*goal_veh[1]/(L**2)
         angle = 0.33*arc
         steering_angle = np.clip(angle, -0.4, 0.4)
         speed = self.select_velocity(steering_angle)
 
-        return speed, steering_angle
-
+        return speed, steering_angle, newaction
 
     def select_velocity(self, angle):
-        if abs(angle) <= 5*np.pi/180:
+        if abs(angle) <= 5*math.pi/180:
+            velocity  = 4.5
+        elif abs(angle) <= 10*math.pi/180:
             velocity  = 4
-        elif abs(angle) <= 10*np.pi/180:
-            velocity  = 4.0
-        elif abs(angle) <= 15*np.pi/180:
-            velocity = 4.0
-        elif abs(angle) <= 20*np.pi/180:
-            velocity = 4.0
+        elif abs(angle) <= 15*math.pi/180:
+            velocity = 3
+        elif abs(angle) <= 20*math.pi/180:
+            velocity = 2.5
         else:
-            velocity = 3.0
+            velocity = 2
         return velocity
+
+    # def select_velocity(self, angle):
+    #     if abs(angle) <= 5*np.pi/180:
+    #         velocity  = 4
+    #     elif abs(angle) <= 10*np.pi/180:
+    #         velocity  = 4.0
+    #     elif abs(angle) <= 15*np.pi/180:
+    #         velocity = 4.0
+    #     elif abs(angle) <= 20*np.pi/180:
+    #         velocity = 4.0
+    #     else:
+    #         velocity = 3.0
+    #     return velocity
 
 
 
     def plan(self, obs, action):
         #Choose the path to follow
-        # path = self.waypoints[action]      
-        
+
         pose_x = obs['poses_x'][0]
         pose_y = obs['poses_y'][0]
         pose_theta = obs['poses_theta'][0]
         position = np.array([pose_x, pose_y])
+        self.ranges = np.array(list(obs['scans'][0]))
 
         if action in self.aval_paths:
             lookahead_point = self.path_waypoints[action,:2]
-            speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
+            speed, steering_angle, newaction = self.get_actuation(pose_theta, lookahead_point, position)
+            ## If action was adjusted with TTC
+            if newaction != -1:
+                action = newaction
         else:
             # raise Exception('Action is not accessible from here!')
-            return 0.0, 0.0
+            return 0.0, 0.0, action
 
-        # lookahead_point = self._get_current_waypoint(path, self.lookahead_distance, position, pose_theta)
-        # if lookahead_point is None:
-        #     return self.safe_speed, 0.0
-        # speed, steering_angle = self.get_actuation(pose_theta, lookahead_point, position)
-        return speed, steering_angle
+        return speed, steering_angle, action
