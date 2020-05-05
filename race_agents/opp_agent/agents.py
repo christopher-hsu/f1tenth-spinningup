@@ -42,7 +42,7 @@ class PurePursuitAgent(Agent):
         else:
             return None
 
-    def plan(self, obs, action):
+    def plan(self, obs):
         pose_x = obs['poses_x'][1]
         pose_y = obs['poses_y'][1]
         pose_theta = obs['poses_theta'][1]
