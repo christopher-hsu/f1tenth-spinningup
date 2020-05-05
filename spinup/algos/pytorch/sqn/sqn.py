@@ -44,7 +44,7 @@ class ReplayBuffer:
 
 def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
-        polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
+        polyak=0.995, lr=1e-2, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=4000, update_every=1, num_test_episodes=10, max_ep_len=4000, 
         logger_kwargs=dict(), save_freq=1, lr_period=0.7):
     """
@@ -216,7 +216,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
 
     def update(data, lr_iter):
         # Update learning rate with cosine schedule
-        lr = np.clip(0.0005*np.cos(np.pi*lr_iter/(total_steps*lr_period))+0.000501, 1e-3, 1e-6)
+        lr = np.clip(0.005*np.cos(np.pi*lr_iter/(total_steps*lr_period))+0.00501, 1e-2, 1e-5)
         q_optimizer.param_groups[0]['lr'] = lr
         # First run one gradient descent step for Q1 and Q2
         q_optimizer.zero_grad()
@@ -243,9 +243,9 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
         for j in range(num_test_episodes):
             d, ep_ret, ep_len = False, 0, 0
             init_positions = np.random.random_integers(0,1)
-            o, ep_ret, ep_len = env.reset({'x': env_init['initial_x'][init_positions],
-                                'y': env_init['initial_y'],
-                                'theta': env_init['initial_theta']})
+            o = env.reset({'x': env_init['initial_x'][init_positions],
+                                           'y': env_init['initial_y'],
+                                           'theta': env_init['initial_theta']})
             #Convert o to RL obs 
             RLobs = ego_agent.process_obs(o)
 
@@ -289,7 +289,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, actor_critic=core.MLPActorCritic
             try:
                 a = random.choice(tuple(ego_agent.aval_paths))
             except: #happens when there are no paths available
-                a = 7
+                a = 15
 
         #RL action to drive control actions
         ego_speed, ego_steer = ego_agent.plan(o, a)

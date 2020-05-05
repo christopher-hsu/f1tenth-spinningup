@@ -50,7 +50,7 @@ def main():
     ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase2)
 
     #Params for opponent agent
-    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy'
+    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy/rew-10_optimal'
     get_action = load_pytorch_policy(opp_policy_paths, deterministic=True)
     opp_agent = OppPurePursuit(ego_csv_paths, wheelbase2)
 
@@ -61,7 +61,7 @@ def main():
     exp_name = datetime.datetime.now().strftime("%m%d%H%M")
 
     # Wrappers
-    # racecar_env = Display2D(racecar_env, map_path, map_img_ext, False, False)
+    racecar_env = Display2D(racecar_env, map_path, map_img_ext, False, False)
 
     # Create env function
     env_fn = lambda : racecar_env
@@ -82,7 +82,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--epochs', type=int, default=30)
+    parser.add_argument('--epochs', type=int, default=40)
     parser.add_argument('--checkpoint_freq', type=int, default=2)
     parser.add_argument('--polyak', type=float, default=0.995)
     parser.add_argument('--alpha', type=float, default=0.2)

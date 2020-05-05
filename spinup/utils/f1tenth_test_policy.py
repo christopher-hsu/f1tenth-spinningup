@@ -157,6 +157,7 @@ def run_policy(env, get_action, env_init, ego_agent, opp_agent,
                                                  'y': env_init['initial_y'],
                                                  'theta': env_init['initial_theta']}), 0, False, 0, 0
             n += 1
+            print(init_positions)
 
     logger.log_tabular('EpRet', with_min_and_max=True)
     logger.log_tabular('EpLen', average_only=True)
