@@ -1,5 +1,5 @@
-# F1tenth Racing Using SQN Reinforcement Learning
-=================================================
+F1tenth Racing Using SQN Reinforcement Learning
+===============================================
 Train your SQN agent to learn a policy to win the race! 
 
 ## ROS
