@@ -53,7 +53,6 @@ class MLPActionSelector(nn.Module):
             q_soft = q_soft.unsqueeze(0)
             q_soft[:, mask] = -float("Inf")
 
-        # pi_log = self.softmax(q_soft)
         pi_log = self.logsoftmax(q_soft)
 
         if deterministic:
@@ -61,7 +60,6 @@ class MLPActionSelector(nn.Module):
             pi_action = mu      
         else:
             try:
-                # pi_action = torch.multinomial(pi_log,1)
                 q_log_dist = torch.distributions.multinomial.Multinomial(1, logits=pi_log)
                 action = q_log_dist.sample()
                 pi_action = torch.argmax(action, dim=1, keepdim=True)
