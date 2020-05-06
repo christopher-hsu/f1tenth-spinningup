@@ -400,6 +400,7 @@ class F110RLEnv(gym.Env, utils.EzPickle):
 
         if obs["lap_counts"][0] >= 2 and obs["lap_counts"][1] >= 2:
             reward += 1* (obs["lap_times"][1] - obs["lap_times"][0])
+            # print((obs["lap_times"][1], obs["lap_times"][0]))
 
         return reward
 

@@ -179,6 +179,7 @@ def run_adversarial_policy(env, ego_action, opp_action, env_init, ego_agent, opp
     o = env.reset({'x': env_init['initial_x'][init_positions],
                    'y': env_init['initial_y'],
                    'theta': env_init['initial_theta']})
+    print(init_positions)
     while n < num_episodes:
         if render == True:
             env.render()
@@ -211,6 +212,7 @@ def run_adversarial_policy(env, ego_action, opp_action, env_init, ego_agent, opp
                                                  'y': env_init['initial_y'],
                                                  'theta': env_init['initial_theta']}), 0, False, 0, 0
             n += 1
+            print(init_positions)
 
     logger.log_tabular('EpRet', with_min_and_max=True)
     logger.log_tabular('EpLen', average_only=True)

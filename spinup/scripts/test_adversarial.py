@@ -44,8 +44,9 @@ def main():
 
     #Params for opponent agent
     opp_agent = OppPurePursuit(ego_csv_paths, wheelbase2)
-    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy/rew-10_optimal'
-    opp_action = load_pytorch_policy(opp_policy_paths, deterministic=True)
+    # opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy/rew-10_optimal'
+    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy/05051706'
+    opp_action = load_pytorch_policy(opp_policy_paths, itr='', deterministic=True)
 
     # init gym backend
     racecar_env.init_map(map_path, map_img_ext, False, False)

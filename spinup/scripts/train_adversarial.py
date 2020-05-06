@@ -50,8 +50,8 @@ def main():
     ego_agent = EgoPurePursuit(ego_csv_paths, wheelbase2)
 
     #Params for opponent agent
-    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy/rew-10_optimal'
-    get_action = load_pytorch_policy(opp_policy_paths, deterministic=True)
+    opp_policy_paths = BASE_DIR + '/race_agents/opp_agent/opp_policy/05051706'
+    get_action = load_pytorch_policy(opp_policy_paths, itr='', deterministic=True)
     opp_agent = OppPurePursuit(ego_csv_paths, wheelbase2)
 
     # init gym backend
