@@ -1,7 +1,8 @@
 # F1tenth Racing Using SQN Reinforcement Learning
+=================================================
 Train your SQN agent to learn a policy to win the race! 
 
-### ROS
+## ROS
 Execute learned policy in ROS with https://github.com/pnorouzi/rl-path-racing
 
 ## Installation for f1tenth_gym(Native)
