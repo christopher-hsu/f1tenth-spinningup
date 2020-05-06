@@ -8,7 +8,7 @@ The environment here is modified from https://github.com/f1tenth/f1tenth_gym
 ## ROS
 Execute learned policy in ROS with https://github.com/pnorouzi/rl-path-racing
 
-## Installation for f1tenth_gym(Native)
+## Installation for f1tenth-spinningup (Native)
 The environment officially supports Python3, Python2 might also work. You'll need several dependencies to run this environment:
 
 ### Eigen and protobuf dependencies:
