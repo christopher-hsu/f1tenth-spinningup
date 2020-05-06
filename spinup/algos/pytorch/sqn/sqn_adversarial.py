@@ -50,6 +50,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
     """
     Soft Q-Network, based on SAC and clipped Double Q-learning
 
+    Written by Christopher Hsu 05/2020
 
     Args:
         env_fn : A function which creates a copy of the environment.
@@ -284,7 +285,7 @@ def sqn(env_fn, env_init, ego_agent, opp_agent, opp_action, actor_critic=core.ML
 
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
-        
+
         # Until start_steps have elapsed, randomly sample actions
         # from a uniform distribution for better exploration. Afterwards, 
         # use the learned policy. 
