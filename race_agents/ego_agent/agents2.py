@@ -135,6 +135,8 @@ class PurePursuitAgent(Agent):
 
             obs_array[((num_subsample)+5) + path] = num/denom
 
+
+        import pdb;pdb.set_trace()
         return obs_array
 
 

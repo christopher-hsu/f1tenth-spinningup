@@ -42,8 +42,11 @@ class F110RLEnv(gym.Env, utils.EzPickle):
         # The state is: 
         self.limit = np.zeros((2,256))
 
-        self.limit[0,:(117*2)+2] = 0  #subsampled Lidar
-        self.limit[1,:(117*2)+2] = 100
+        self.limit[0,:(117*2)] = 0  #subsampled Lidar
+        self.limit[1,:(117*2)] = 10
+
+        self.limit[0,(117*2):(117*2)+2] = -10  #Position of the other car wrt our car
+        self.limit[1,(117*2):(117*2)+2] = 10
 
         self.limit[0,(117*2)+2] = -2*np.pi  #Orientation of the other car wrt our car
         self.limit[1,(117*2)+2] = 2*np.pi
