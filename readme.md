@@ -1,12 +1,12 @@
-F1tenth Racing Using SQN Reinforcement Learning
+F1tenth Racing Using Soft Double Q-Learning
 ===============================================
 Train your SQN agent to learn a policy to win the race! 
 
-## F1tenth_gym environment
-The environment here is modified from https://github.com/f1tenth/f1tenth_gym
-
 ## ROS
 Execute learned policy in ROS with https://github.com/pnorouzi/rl-path-racing
+
+## F1tenth_gym environment
+The environment here is modified from https://github.com/f1tenth/f1tenth_gym
 
 ## Installation for f1tenth-spinningup (Native)
 The environment officially supports Python3. You'll need several dependencies to run this environment:
